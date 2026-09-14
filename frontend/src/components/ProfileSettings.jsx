@@ -10,7 +10,16 @@ import {
   ShieldCheck
 } from "lucide-react";
 
-export default function ProfileSettings({ farm, language, setLanguage, t }) {
+export default function ProfileSettings({
+  farm,
+  language,
+  setLanguage,
+  fontSize,
+  setFontSize,
+  contrastMode,
+  setContrastMode,
+  t
+}) {
   const [unitArea, setUnitArea] = useState("Acres");
   const [unitTemp, setUnitTemp] = useState("Celsius (°C)");
   const [reportExported, setReportExported] = useState(false);
@@ -175,7 +184,7 @@ export default function ProfileSettings({ farm, language, setLanguage, t }) {
                     onClick={() => setUnitTemp(unit)}
                     className={`flex-1 rounded-xl py-2 text-xs font-semibold border transition-all ${
                       unitTemp === unit
-                        ? "bg-[var(--surface-2)] text-[var(--leaf)] border-[var(--primary)]"
+                        ? "bg-[var(--surface-2)] text-[var(--leaf)] border-[var(--primary)] font-bold"
                         : "bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:text-white"
                     }`}
                   >
@@ -185,6 +194,92 @@ export default function ProfileSettings({ farm, language, setLanguage, t }) {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Accessibility & Typography Controls Card */}
+      <div className="card p-6 space-y-4 border-l-4 border-l-[var(--harvest)] shadow-lg">
+        <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+          <div className="flex items-center gap-2 text-sm font-bold text-white">
+            <Sliders className="w-4 h-4 text-[var(--harvest)]" />
+            <span>Display Typography & Visual Contrast Controls</span>
+          </div>
+          <span className="badge badge-emerald text-xs">WCAG AAA Ready</span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+          {/* Font Size Scaling */}
+          <div className="space-y-2">
+            <label className="block text-white font-bold">
+              Text Font Size Scaling
+            </label>
+            <p className="text-[11px] text-[var(--text-secondary)] mb-2">
+              Scale all text across dashboards, tables, metrics, and advisory panels.
+            </p>
+            <div className="flex gap-2">
+              {[
+                { id: "normal", label: "Normal (100%)", size: "15.5px" },
+                { id: "large", label: "Large (115%)", size: "17.5px" },
+                { id: "xl", label: "Extra Large (130%)", size: "19.5px" }
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setFontSize && setFontSize(opt.id)}
+                  className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-bold border transition-all ${
+                    fontSize === opt.id
+                      ? "bg-[var(--primary)] text-white border-[var(--primary)] shadow-md"
+                      : "bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:text-white"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Contrast Mode */}
+          <div className="space-y-2">
+            <label className="block text-white font-bold">
+              Visual Color Contrast Level
+            </label>
+            <p className="text-[11px] text-[var(--text-secondary)] mb-2">
+              Enhance visibility under harsh outdoor sunlight or high-glare field environments.
+            </p>
+            <div className="flex gap-2">
+              {[
+                { id: "normal", label: "Standard Contrast", icon: "🌱" },
+                { id: "high", label: "Ultra-High Contrast (OLED)", icon: "◐" }
+              ].map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setContrastMode && setContrastMode(c.id)}
+                  className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                    contrastMode === c.id
+                      ? "bg-amber-400 text-black border-amber-300 font-extrabold shadow-md"
+                      : "bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:text-white"
+                  }`}
+                >
+                  <span>{c.icon}</span>
+                  <span>{c.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Live Typography Preview Box */}
+        <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] space-y-1 mt-2">
+          <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider font-bold">
+            Live Readability Preview:
+          </span>
+          <p className="text-white font-bold text-sm">
+            🌾 Wheat Crop (PBW-343) • Volumetric Water Content: 68% • Irrigation Status: HOLD
+          </p>
+          <p className="text-xs text-[var(--text-secondary)]">
+            High contrast text ensures agronomists and farmers can effortlessly read telemetry in all outdoor lighting conditions.
+          </p>
         </div>
       </div>
     </div>

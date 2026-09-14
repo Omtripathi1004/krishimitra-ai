@@ -54,6 +54,28 @@ export default function App() {
   const [networkError, setNetworkError] = useState(null);
   const [gpsDetecting, setGpsDetecting] = useState(false);
 
+  // Accessibility Controls (Font Size & High Contrast)
+  const [fontSize, setFontSize] = useState(() => localStorage.getItem("km_font_size") || "normal");
+  const [contrastMode, setContrastMode] = useState(() => localStorage.getItem("km_contrast") || "normal");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-font-size", fontSize);
+    localStorage.setItem("km_font_size", fontSize);
+  }, [fontSize]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-contrast", contrastMode);
+    localStorage.setItem("km_contrast", contrastMode);
+  }, [contrastMode]);
+
+  const cycleFontSize = () => {
+    setFontSize((prev) => (prev === "normal" ? "large" : prev === "large" ? "xl" : "normal"));
+  };
+
+  const toggleContrast = () => {
+    setContrastMode((prev) => (prev === "normal" ? "high" : "normal"));
+  };
+
   const t = translations[language] || translations.en;
 
   // Initial Data Fetch
@@ -374,6 +396,32 @@ export default function App() {
               <span>AI Engine: Online</span>
             </div>
 
+            {/* Font Size Adjuster Button */}
+            <button
+              onClick={cycleFontSize}
+              className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 hover:text-white hover:border-slate-700 transition-colors flex items-center gap-1.5"
+              title="Adjust Font Size: Normal (100%), Large (115%), Extra Large (130%)"
+            >
+              <span className="font-mono text-xs font-bold text-emerald-400">Aa</span>
+              <span className="text-[11px] font-mono text-slate-300">
+                {fontSize === "normal" ? "100%" : fontSize === "large" ? "115%" : "130%"}
+              </span>
+            </button>
+
+            {/* High Contrast Toggle Button */}
+            <button
+              onClick={toggleContrast}
+              className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all flex items-center gap-1.5 ${
+                contrastMode === "high"
+                  ? "bg-amber-400 text-black border-amber-300 shadow-md font-extrabold"
+                  : "bg-slate-900 border-slate-800 text-slate-200 hover:text-white"
+              }`}
+              title="Toggle Ultra-High Contrast Mode (WCAG AAA)"
+            >
+              <span>◐</span>
+              <span className="hidden sm:inline">{contrastMode === "high" ? "High Contrast" : "Contrast"}</span>
+            </button>
+
             {/* Language Selector */}
             <button
               onClick={() => setLanguage(language === "en" ? "hi" : "en")}
@@ -574,6 +622,10 @@ export default function App() {
               farm={farm}
               language={language}
               setLanguage={setLanguage}
+              fontSize={fontSize}
+              setFontSize={setFontSize}
+              contrastMode={contrastMode}
+              setContrastMode={setContrastMode}
               t={t}
             />
           )}
