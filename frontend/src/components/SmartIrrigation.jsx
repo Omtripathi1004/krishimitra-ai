@@ -55,25 +55,25 @@ export default function SmartIrrigation({ smartIrrigation, farm, weather, t }) {
   return (
     <div className="space-y-6">
       {/* ── HEADER ── */}
-      <div className="card p-5 sm:p-6 border-l-4 border-l-[var(--sky)] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg">
+      <div className="card card-sky p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[var(--sky)]/15 text-[var(--sky)] border border-[var(--sky)]/30 shadow-inner">
+            <div className="p-2.5 rounded-xl bg-sky-500/15 text-[var(--c-sky-neon)] border border-sky-400/30 shadow-inner">
               <Droplets className="w-6 h-6 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-2.5">
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
-                  Smart Irrigation & Soil Hydrology Command
+                <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white font-display">
+                  Smart Irrigation &amp; Soil Hydrology Command
                 </h1>
-                <span className="badge badge-sky text-xs font-semibold">
+                <span className="badge badge-sky text-xs font-semibold font-tech">
                   FAO-56 Penman-Monteith
                 </span>
-                <span className="badge badge-emerald text-xs font-semibold">
+                <span className="badge badge-leaf text-xs font-semibold font-tech">
                   Live Synced
                 </span>
               </div>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              <p className="text-xs text-sky-200/80 mt-0.5 font-sans">
                 Multi-layer root-zone hydrology balance, evapotranspiration loss modeling, and precision drip scheduling for{" "}
                 <strong className="text-white">{farm?.farm_name || "Primary Holding"}</strong>
               </p>
@@ -82,31 +82,31 @@ export default function SmartIrrigation({ smartIrrigation, farm, weather, t }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono">
-          <div className="px-3 py-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-secondary)]">
+          <div className="px-3 py-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--c-sky-border)] text-sky-200">
             Soil: <strong className="text-white">{farm?.soil_type || "Alluvial Loam"}</strong>
           </div>
-          <div className="px-3 py-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-secondary)]">
-            Delivery: <strong className="text-[var(--leaf)]">{farm?.irrigation_method || "Drip Micro-Emitter"}</strong>
+          <div className="px-3 py-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--c-leaf-border)] text-[var(--c-leaf-neon)]">
+            Delivery: <strong className="text-white">{farm?.irrigation_method || "Drip Micro-Emitter"}</strong>
           </div>
         </div>
       </div>
 
-      {/* ── PRIORITY DIRECTIVE BANNER ── */}
-      <div className="card p-6 border-l-4 border-l-[var(--harvest)] bg-gradient-to-r from-[var(--surface)] via-[#0D251A] to-[var(--surface-2)] shadow-xl relative overflow-hidden">
-        <div className="absolute right-0 top-0 bottom-0 w-80 bg-gradient-to-l from-[var(--primary)]/10 to-transparent pointer-events-none" />
+      {/* ── PRIORITY DIRECTIVE BANNER (PINK / ROSE ACCENT) ── */}
+      <div className="card card-pink p-6 shadow-xl relative overflow-hidden">
+        <div className="absolute right-0 top-0 bottom-0 w-80 bg-gradient-to-l from-rose-500/15 to-transparent pointer-events-none" />
 
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border)] pb-4">
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-rose-500/20 pb-4">
           <div className="space-y-1">
-            <span className="text-[11px] font-bold text-[var(--harvest)] uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-[var(--c-pink-neon)] uppercase tracking-wider flex items-center gap-1.5 font-tech">
               <Sparkles className="w-3.5 h-3.5" /> Real-Time Decision-Support Directive
             </span>
             <div className="flex items-center gap-3">
-              <span className={`text-sm font-bold px-3 py-1 rounded-full border ${
+              <span className={`text-sm font-bold px-3 py-1 rounded-full border font-tech ${
                 status === "Wait"
-                  ? "bg-sky-950/80 text-[var(--sky)] border-sky-800"
+                  ? "bg-rose-950/80 text-[var(--c-pink-neon)] border-rose-800 shadow-[0_0_12px_rgba(251,113,133,0.25)]"
                   : status === "Irrigate Now"
-                  ? "bg-red-950/80 text-red-400 border-red-800 animate-pulse"
-                  : "bg-amber-950/80 text-amber-400 border-amber-800"
+                  ? "bg-emerald-950/80 text-[var(--c-leaf-neon)] border-emerald-700 animate-pulse"
+                  : "bg-amber-950/80 text-[var(--c-gold-neon)] border-amber-700"
               }`}>
                 {status === "Wait" ? "HOLD IRRIGATION (24h - 36h)" : status}
               </span>
@@ -154,60 +154,60 @@ export default function SmartIrrigation({ smartIrrigation, farm, weather, t }) {
         </div>
       </div>
 
-      {/* ── 4 KEY HYDRAULIC KPI STATS ── */}
+      {/* ── 4 KEY HYDRAULIC KPI STATS (MULTI-COLOR THEMED) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {/* 1. Reference Evapotranspiration */}
-        <div className="stat-card">
+        {/* 1. Reference Evapotranspiration - Sky Neon */}
+        <div className="card card-sky p-4">
           <div className="flex items-center justify-between">
-            <span className="stat-label">Reference ET₀</span>
-            <Gauge className="w-4 h-4 text-[var(--sky)]" />
+            <span className="text-[11px] font-bold text-[var(--c-sky-neon)] font-tech uppercase tracking-wider">Reference ET₀</span>
+            <Gauge className="w-4 h-4 text-[var(--c-sky-neon)]" />
           </div>
-          <div className="stat-value text-2xl font-bold text-white mt-1">
-            {et0} <span className="text-sm font-normal text-[var(--text-muted)]">mm/d</span>
+          <div className="text-2xl font-black text-white mt-1 font-mono">
+            {et0} <span className="text-sm font-normal text-sky-200/70">mm/d</span>
           </div>
-          <div className="stat-meta text-xs text-[var(--text-secondary)] mt-1">
+          <div className="text-xs text-sky-200/80 mt-1">
             Atmospheric evaporative pull
           </div>
         </div>
 
-        {/* 2. Soil Moisture VWC */}
-        <div className="stat-card">
+        {/* 2. Soil Moisture VWC - Leaf Neon */}
+        <div className="card card-leaf p-4">
           <div className="flex items-center justify-between">
-            <span className="stat-label">Soil Moisture</span>
-            <Layers className="w-4 h-4 text-[var(--leaf)]" />
+            <span className="text-[11px] font-bold text-[var(--c-leaf-neon)] font-tech uppercase tracking-wider">Soil Moisture</span>
+            <Layers className="w-4 h-4 text-[var(--c-leaf-neon)]" />
           </div>
-          <div className="stat-value text-2xl font-bold text-[var(--leaf)] mt-1">
-            {simulatedMoisture}% <span className="text-xs font-normal text-[var(--text-muted)]">VWC</span>
+          <div className="text-2xl font-black text-[var(--c-leaf-neon)] mt-1 font-mono">
+            {simulatedMoisture}% <span className="text-xs font-normal text-emerald-200/70">VWC</span>
           </div>
-          <div className="stat-meta text-xs text-[var(--leaf)] mt-1">
+          <div className="text-xs text-[var(--c-leaf-neon)] mt-1">
             Optimal Growth Band (55-75%)
           </div>
         </div>
 
-        {/* 3. System Efficiency */}
-        <div className="stat-card">
+        {/* 3. System Efficiency - Indigo Neon */}
+        <div className="card card-indigo p-4">
           <div className="flex items-center justify-between">
-            <span className="stat-label">Drip Efficiency</span>
-            <Droplets className="w-4 h-4 text-[var(--sky)]" />
+            <span className="text-[11px] font-bold text-[var(--c-indigo-neon)] font-tech uppercase tracking-wider">Drip Efficiency</span>
+            <Droplets className="w-4 h-4 text-[var(--c-indigo-neon)]" />
           </div>
-          <div className="stat-value text-2xl font-bold text-[var(--sky)] mt-1">
+          <div className="text-2xl font-black text-[var(--c-indigo-neon)] mt-1 font-mono">
             {efficiency}
           </div>
-          <div className="stat-meta text-xs text-[var(--text-secondary)] mt-1">
+          <div className="text-xs text-indigo-200/80 mt-1">
             Pressure: 1.2 bar optimal
           </div>
         </div>
 
-        {/* 4. Financial & Water Savings */}
-        <div className="stat-card">
+        {/* 4. Financial & Water Savings - Gold Neon */}
+        <div className="card card-gold p-4">
           <div className="flex items-center justify-between">
-            <span className="stat-label">Savings Today</span>
-            <Zap className="w-4 h-4 text-[var(--harvest)]" />
+            <span className="text-[11px] font-bold text-[var(--c-gold-neon)] font-tech uppercase tracking-wider">Savings Today</span>
+            <Zap className="w-4 h-4 text-[var(--c-gold-neon)]" />
           </div>
-          <div className="stat-value text-2xl font-bold text-white mt-1">
-            ₹{costSavedInr} <span className="text-xs font-normal text-[var(--text-muted)]">saved</span>
+          <div className="text-2xl font-black text-[var(--c-gold-neon)] mt-1 font-mono">
+            ₹{costSavedInr} <span className="text-xs font-normal text-amber-200/70">saved</span>
           </div>
-          <div className="stat-meta text-xs text-[var(--leaf)] mt-1">
+          <div className="text-xs text-amber-200/80 mt-1">
             {waterSavedLiters.toLocaleString()} L water conserved
           </div>
         </div>
@@ -215,17 +215,17 @@ export default function SmartIrrigation({ smartIrrigation, farm, weather, t }) {
 
       {/* ── INTERACTIVE HYDROLOGY RESERVOIR & CYCLE SIMULATOR ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Dynamic Visual Soil Water Reservoir Tank */}
-        <div className="card p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+        {/* Left: Dynamic Visual Soil Water Reservoir Tank (Sky Neon Card) */}
+        <div className="card card-sky p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-sky-400/20 pb-3">
             <div className="flex items-center gap-2">
-              <Layers className="w-5 h-5 text-[var(--leaf)]" />
+              <Layers className="w-5 h-5 text-[var(--c-sky-neon)]" />
               <div>
-                <h2 className="text-base font-bold text-white">Root-Zone Water Reservoir Tank</h2>
-                <p className="text-xs text-[var(--text-secondary)]">Volumetric Water Content (VWC) cross-section gauge</p>
+                <h2 className="text-base font-bold text-white font-display">Root-Zone Water Reservoir Tank</h2>
+                <p className="text-xs text-sky-200/70 font-tech">Volumetric Water Content (VWC) cross-section gauge</p>
               </div>
             </div>
-            <span className="badge badge-emerald text-xs">{simulatedMoisture}% Capacity</span>
+            <span className="badge badge-sky text-xs font-mono">{simulatedMoisture}% Capacity</span>
           </div>
 
           {/* Visual Tank Graphic */}
@@ -339,53 +339,53 @@ export default function SmartIrrigation({ smartIrrigation, farm, weather, t }) {
 
         {/* Right: FAO-56 Balance Equation & 72h Schedule Timeline */}
         <div className="space-y-6">
-          {/* FAO-56 Mathematical Model Card */}
-          <div className="card p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+          {/* FAO-56 Mathematical Model Card (Indigo Neon) */}
+          <div className="card card-indigo p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-indigo-400/20 pb-3">
               <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-[var(--sky)]" />
+                <Activity className="w-5 h-5 text-[var(--c-indigo-neon)]" />
                 <div>
-                  <h2 className="text-base font-bold text-white">FAO-56 Water Balance Calculation</h2>
-                  <p className="text-xs text-[var(--text-secondary)]">Dual crop coefficient evapotranspiration synthesis</p>
+                  <h2 className="text-base font-bold text-white font-display">FAO-56 Water Balance Calculation</h2>
+                  <p className="text-xs text-indigo-200/70 font-tech">Dual crop coefficient evapotranspiration synthesis</p>
                 </div>
               </div>
-              <span className="badge badge-sky text-xs font-mono">ETc Formula</span>
+              <span className="badge badge-indigo text-xs font-mono">ETc Formula</span>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] font-mono text-xs space-y-2">
-              <div className="text-[var(--harvest)] font-bold">
+            <div className="p-3.5 rounded-xl bg-[var(--surface-2)] border border-[var(--c-indigo-border)] font-mono text-xs space-y-2">
+              <div className="text-[var(--c-gold-neon)] font-bold">
                 ETc = ET₀ × Kc × K_stage
               </div>
-              <div className="text-[var(--text-secondary)] text-[11px]">
+              <div className="text-indigo-200/80 text-[11px]">
                 = {et0} mm/d (ET₀) × 0.85 (Wheat Kc) × 0.8 (Vegetative stage) = <strong className="text-white">{etc} mm/day</strong>
               </div>
               <div className="pt-2 border-t border-[var(--border-subtle)] text-[11px] flex justify-between">
                 <span className="text-[var(--text-muted)]">Incoming 7d Rainfall:</span>
-                <span className="font-bold text-[var(--sky)]">+14.5 mm</span>
+                <span className="font-bold text-[var(--c-sky-neon)]">+14.5 mm</span>
               </div>
               <div className="flex justify-between text-[11px]">
                 <span className="text-[var(--text-muted)]">7-Day Cumulative ETc Loss:</span>
-                <span className="font-bold text-[var(--harvest)]">−{(etc * 7).toFixed(1)} mm</span>
+                <span className="font-bold text-[var(--c-gold-neon)]">−{(etc * 7).toFixed(1)} mm</span>
               </div>
               <div className="pt-1.5 border-t border-[var(--border-subtle)] flex justify-between font-bold">
                 <span className="text-white">Hydrological Surplus:</span>
-                <span className="text-[var(--leaf)]">+{(14.5 - etc * 7).toFixed(1)} mm (No Irrigation Needed)</span>
+                <span className="text-[var(--c-leaf-neon)]">+{(14.5 - etc * 7).toFixed(1)} mm (No Irrigation Needed)</span>
               </div>
             </div>
 
-            <div className="text-xs text-[var(--text-secondary)] leading-relaxed">
+            <div className="text-xs text-indigo-200/80 leading-relaxed">
               Because forecasted precipitation exceeds atmospheric demand over the 7-day horizon, irrigating today would only cause nitrogen runoff and saturate root capillaries.
             </div>
           </div>
 
-          {/* 72-Hour Precision Scheduling Window */}
-          <div className="card p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+          {/* 72-Hour Precision Scheduling Window (Golden Saffron) */}
+          <div className="card card-gold p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-amber-400/20 pb-3">
               <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-[var(--harvest)]" />
+                <Calendar className="w-5 h-5 text-[var(--c-gold-neon)]" />
                 <div>
-                  <h2 className="text-base font-bold text-white">72-Hour Precision Schedule Windows</h2>
-                  <p className="text-xs text-[var(--text-secondary)]">Tariff-optimized, weather-guarded pump timing</p>
+                  <h2 className="text-base font-bold text-white font-display">72-Hour Precision Schedule Windows</h2>
+                  <p className="text-xs text-amber-200/70 font-tech">Tariff-optimized, weather-guarded pump timing</p>
                 </div>
               </div>
             </div>

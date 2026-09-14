@@ -31,17 +31,20 @@ function RiskGauge({ value, max = 100 }) {
   );
 }
 
-function RiskCard({ name, level, score, description, icon: Icon, drivers, actions }) {
+function RiskCard({ name, level, score, description, icon: Icon, drivers, actions, theme = "leaf" }) {
   const [open, setOpen] = useState(false);
   const StatusIcon = RISK_ICON[level] || CheckCircle2;
   const color = RISK_COLOR[level] || "var(--leaf)";
 
+  const themeClass =
+    theme === "pink" ? "card-pink" :
+    theme === "gold" ? "card-gold" :
+    theme === "sky" ? "card-sky" :
+    theme === "indigo" ? "card-indigo" :
+    theme === "violet" ? "card-violet" : "card-leaf";
+
   return (
-    <div
-      className="card p-4 flex flex-col gap-3 transition-all hover:scale-[1.01]"
-      style={level === "High" || level === "Critical" ? { borderColor: "rgba(248,113,113,0.3)" } :
-             level === "Moderate" ? { borderColor: "rgba(251,191,36,0.25)" } : {}}
-    >
+    <div className={`card ${themeClass} p-4 flex flex-col gap-3 transition-all hover:scale-[1.01]`}>
       {/* Header */}
       <div className="flex items-start gap-3">
         <div
@@ -52,8 +55,8 @@ function RiskCard({ name, level, score, description, icon: Icon, drivers, action
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="text-sm font-bold" style={{ color: "var(--text-100)" }}>{name}</span>
-            <span className={`badge ${RISK_LEVELS[level] || "badge-muted"} text-[10px]`}>
+            <span className="text-sm font-bold font-display" style={{ color: "var(--text-100)" }}>{name}</span>
+            <span className={`badge ${RISK_LEVELS[level] || "badge-muted"} text-[10px] font-tech`}>
               <StatusIcon className="w-2.5 h-2.5" /> {level}
             </span>
           </div>
@@ -69,7 +72,7 @@ function RiskCard({ name, level, score, description, icon: Icon, drivers, action
         <>
           <button
             onClick={() => setOpen(!open)}
-            className="text-xs font-semibold flex items-center gap-1 transition-colors"
+            className="text-xs font-semibold flex items-center gap-1 transition-colors font-tech"
             style={{ color: open ? "var(--text-400)" : "var(--leaf)" }}
           >
             {open ? "Hide details ↑" : "Drivers & actions →"}
@@ -78,7 +81,7 @@ function RiskCard({ name, level, score, description, icon: Icon, drivers, action
             <div className="space-y-2 anim-fade-in">
               {drivers?.length > 0 && (
                 <div className="text-[11px] space-y-1">
-                  <div className="section-label mb-1.5">Risk Drivers</div>
+                  <div className="section-label mb-1.5 font-tech">Risk Drivers</div>
                   {drivers.map((d, i) => (
                     <div key={i} className="flex items-start gap-1.5" style={{ color: "var(--text-300)" }}>
                       <span className="mt-1 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
@@ -89,7 +92,7 @@ function RiskCard({ name, level, score, description, icon: Icon, drivers, action
               )}
               {actions?.length > 0 && (
                 <div className="text-[11px] space-y-1">
-                  <div className="section-label mb-1.5">Recommended Actions</div>
+                  <div className="section-label mb-1.5 font-tech">Recommended Actions</div>
                   {actions.map((a, i) => (
                     <div key={i} className="flex items-start gap-1.5" style={{ color: "var(--text-200)" }}>
                       <ArrowRight className="w-3 h-3 mt-0.5 shrink-0" style={{ color: "var(--leaf)" }} />
@@ -114,9 +117,9 @@ function WeeklyTimeline({ days }) {
         const overallColor = maxRisk < 30 ? "#22C55E" : maxRisk < 60 ? "#FBBF24" : "#F87171";
         return (
           <div key={i} className="flex items-center gap-3">
-            <div className="w-14 text-[10px] font-bold shrink-0" style={{ color: "var(--text-400)" }}>{day.label}</div>
+            <div className="w-14 text-[10px] font-bold shrink-0 font-mono" style={{ color: "var(--text-400)" }}>{day.label}</div>
             <div className="flex-1 flex gap-1 items-center h-5">
-              {[{ v: day.rust, c: "#F87171", n: "Rust" }, { v: day.thermal, c: "#FBBF24", n: "Thermal" }, { v: day.hydro, c: "#38BDF8", n: "Hydro" }, { v: day.pest, c: "#A78BFA", n: "Pest" }].map(b => (
+              {[{ v: day.rust, c: "#FB7185", n: "Rust" }, { v: day.thermal, c: "#FCD34D", n: "Thermal" }, { v: day.hydro, c: "#38BDF8", n: "Hydro" }, { v: day.pest, c: "#C084FC", n: "Pest" }].map(b => (
                 <div
                   key={b.n}
                   className="h-full rounded-sm transition-all"
@@ -125,7 +128,7 @@ function WeeklyTimeline({ days }) {
                 />
               ))}
             </div>
-            <div className="text-[10px] font-bold w-8 text-right" style={{ color: overallColor }}>{maxRisk}%</div>
+            <div className="text-[10px] font-bold font-mono w-8 text-right" style={{ color: overallColor }}>{maxRisk}%</div>
           </div>
         );
       })}
@@ -139,6 +142,7 @@ export default function FarmRiskCenter({ weather, farm, t }) {
       name: "Yellow Rust (Puccinia striiformis)",
       level: "Low",
       score: 18,
+      theme: "pink",
       icon: Bug,
       description: "Airborne fungal pathogen. Requires >75% RH and leaf wetness >3h. Current conditions below threshold.",
       drivers: [
@@ -156,6 +160,7 @@ export default function FarmRiskCenter({ weather, farm, t }) {
       name: "Thermal Crop Stress",
       level: "Moderate",
       score: 42,
+      theme: "gold",
       icon: Thermometer,
       description: "Mid-day temperature peaks create short windows of heat stress in vegetative biomass. Not yet critical.",
       drivers: [
@@ -173,6 +178,7 @@ export default function FarmRiskCenter({ weather, farm, t }) {
       name: "Hydrological Risk (Flooding / Waterlogging)",
       level: "Low",
       score: 12,
+      theme: "sky",
       icon: Droplets,
       description: "Soil drainage capacity is adequate. 14.5mm forecasted rain is within safe absorption threshold.",
       drivers: [
@@ -190,6 +196,7 @@ export default function FarmRiskCenter({ weather, farm, t }) {
       name: "Aphid & Sucking Pest Index",
       level: "Low",
       score: 21,
+      theme: "violet",
       icon: Bug,
       description: "Aphid colony density below Economic Threshold Level (ETL). No spray intervention needed at present.",
       drivers: [
@@ -207,6 +214,7 @@ export default function FarmRiskCenter({ weather, farm, t }) {
       name: "Soil Nutrient Deficiency",
       level: "Low",
       score: 25,
+      theme: "leaf",
       icon: Activity,
       description: "Zinc marginally below ICAR optimum. Other primary and secondary nutrients within optimal ranges.",
       drivers: [
@@ -224,6 +232,7 @@ export default function FarmRiskCenter({ weather, farm, t }) {
       name: "Wind / Spray Drift Risk",
       level: "Low",
       score: 8,
+      theme: "indigo",
       icon: Wind,
       description: "Wind speed ideal for all spray operations. Negligible spray drift risk to neighboring fields.",
       drivers: [
@@ -253,60 +262,57 @@ export default function FarmRiskCenter({ weather, farm, t }) {
 
   return (
     <div className="space-y-5 anim-fade-up">
-      {/* Header */}
-      <div className="card p-5" style={{ borderLeft: "3px solid var(--leaf)" }}>
+      {/* Header (Pink Neon Accent) */}
+      <div className="card card-pink p-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
-            <div className="p-2.5 rounded-xl border" style={{ background: "rgba(34,197,94,0.1)", borderColor: "rgba(34,197,94,0.28)" }}>
-              <ShieldAlert className="w-6 h-6" style={{ color: "var(--leaf)" }} />
+            <div className="p-2.5 rounded-xl border bg-rose-500/15 border-rose-500/30 text-[var(--c-pink-neon)]">
+              <ShieldAlert className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-lg font-bold" style={{ fontFamily: "var(--font-display)", color: "var(--text-100)" }}>
+              <h1 className="text-lg font-bold font-display text-white">
                 Farm Risk Command Center
               </h1>
-              <p className="text-xs mt-0.5" style={{ color: "var(--text-300)" }}>
+              <p className="text-xs mt-0.5 text-rose-200/80">
                 Compound disease, pest, climate and hydrological risk surveillance — 6 independent risk vectors, updated hourly.
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <div
-              className="px-4 py-2.5 rounded-xl border text-center"
-              style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)" }}
-            >
-              <div className="text-[10px] uppercase font-bold tracking-wider mb-0.5" style={{ color: "var(--text-400)" }}>Overall Risk</div>
-              <div className="text-2xl font-bold font-mono" style={{ color: "var(--leaf)" }}>
-                {overallRisk}<span className="text-xs font-normal" style={{ color: "var(--text-400)" }}>/100</span>
+            <div className="px-4 py-2.5 rounded-xl border text-center bg-rose-950/40 border-rose-800/60 shadow-[0_0_15px_rgba(251,113,133,0.15)]">
+              <div className="text-[10px] uppercase font-bold tracking-wider mb-0.5 text-rose-300 font-tech">Overall Risk</div>
+              <div className="text-2xl font-black font-mono text-[var(--c-leaf-neon)]">
+                {overallRisk}<span className="text-xs font-normal text-slate-400">/100</span>
               </div>
-              <div className="badge badge-leaf mt-1 text-[10px]">● Low — Favorable</div>
+              <div className="badge badge-leaf mt-1 text-[10px] font-tech">● Low — Favorable</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 7-Day Risk Heatmap */}
-      <div className="card p-5">
+      {/* 7-Day Risk Heatmap (Deep Indigo Theme) */}
+      <div className="card card-indigo p-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <BarChart2 className="w-4 h-4" style={{ color: "var(--leaf)" }} />
-            <h2 className="text-sm font-bold" style={{ color: "var(--text-100)" }}>7-Day Risk Projection</h2>
+            <BarChart2 className="w-4 h-4 text-[var(--c-indigo-neon)]" />
+            <h2 className="text-sm font-bold font-display text-white">7-Day Risk Projection</h2>
           </div>
-          <div className="flex items-center gap-3 text-[10px]" style={{ color: "var(--text-400)" }}>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#F87171CC" }} /> Rust</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#FBBF24CC" }} /> Thermal</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#38BDF8CC" }} /> Hydro</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#A78BFACC" }} /> Pest</span>
+          <div className="flex items-center gap-3 text-[10px] font-tech" style={{ color: "var(--text-400)" }}>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#FB7185" }} /> Rust (Pink)</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#FCD34D" }} /> Thermal (Gold)</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#38BDF8" }} /> Hydro (Sky)</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#C084FC" }} /> Pest (Purple)</span>
           </div>
         </div>
         <WeeklyTimeline days={weeklyTimeline} />
-        <p className="text-[10px] mt-3" style={{ color: "var(--text-400)" }}>
-          Stacked bar width represents relative risk contribution. Values from ICAR CRIDA multi-hazard model.
+        <p className="text-[10px] mt-3 text-indigo-200/60 font-tech">
+          Stacked bar width represents relative risk contribution. Values synthesized from ICAR CRIDA multi-hazard model.
         </p>
       </div>
 
-      {/* Risk Cards Grid */}
+      {/* Risk Cards Grid (Multi-Color Themes: Pink, Gold, Sky, Violet, Leaf, Indigo) */}
       <div>
-        <div className="section-label mb-3">Individual Risk Vector Analysis</div>
+        <div className="section-label mb-3 font-tech text-[var(--c-sky-neon)]">Individual Risk Vector Analysis (Color-Coded By Hazard Domain)</div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 anim-stagger">
           {risks.map(r => <RiskCard key={r.name} {...r} />)}
         </div>

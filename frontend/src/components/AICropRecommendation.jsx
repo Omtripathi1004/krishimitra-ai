@@ -5,40 +5,45 @@ import {
 } from "lucide-react";
 import { API_BASE } from "../config";
 
-const CROP_COLORS = ["var(--leaf)", "var(--sky)", "var(--amber)", "var(--violet)"];
+const CROP_COLORS = ["#F59E0B", "#38BDF8", "#FB7185", "#818CF8"];
 const CROP_BG    = [
-  "rgba(34,197,94,0.10)",  "rgba(56,189,248,0.10)",
-  "rgba(251,191,36,0.10)", "rgba(167,139,250,0.10)"
+  "rgba(245,158,11,0.15)", "rgba(56,189,248,0.15)",
+  "rgba(244,63,94,0.15)",  "rgba(99,102,241,0.15)"
 ];
 const CROP_BORDER = [
-  "rgba(34,197,94,0.28)",  "rgba(56,189,248,0.25)",
-  "rgba(251,191,36,0.25)", "rgba(167,139,250,0.25)"
+  "rgba(245,158,11,0.45)", "rgba(56,189,248,0.45)",
+  "rgba(244,63,94,0.45)",  "rgba(99,102,241,0.45)"
+];
+const CROP_CARD_THEMES = [
+  "card-gold border-amber-400/50",
+  "card-sky border-sky-400/50",
+  "card-pink border-rose-400/50",
+  "card-indigo border-indigo-400/50"
 ];
 
 function ScoreBar({ value, color }) {
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 kpi-progress-track">
+      <div className="flex-1 h-2 rounded-full bg-slate-900 border border-white/10 overflow-hidden">
         <div
-          className="kpi-progress-fill"
-          style={{ width: `${value}%`, background: `linear-gradient(90deg, ${color}80, ${color})` }}
+          className="h-full rounded-full transition-all duration-700 shadow-md"
+          style={{ width: `${value}%`, background: `linear-gradient(90deg, ${color}90, ${color})` }}
         />
       </div>
-      <span className="text-xs font-bold font-mono w-10 text-right" style={{ color }}>{value}%</span>
+      <span className="text-xs font-extrabold font-mono w-12 text-right" style={{ color }}>{value}%</span>
     </div>
   );
 }
 
-function FeatureBar({ label, importance, effect }) {
-  const barColor = effect === "positive" ? "var(--leaf)" : effect === "negative" ? "var(--rose)" : "var(--amber)";
+function FeatureBar({ label, importance, color }) {
   return (
-    <div>
-      <div className="flex items-center justify-between mb-1 text-[11px]">
-        <span style={{ color: "var(--text-300)" }}>{label}</span>
-        <span className="font-semibold font-mono" style={{ color: barColor }}>{importance}%</span>
+    <div className="p-2 rounded-xl bg-black/30 border border-white/5 space-y-1">
+      <div className="flex items-center justify-between text-[11px]">
+        <span className="text-slate-200 font-semibold">{label}</span>
+        <span className="font-extrabold font-mono" style={{ color }}>{importance}%</span>
       </div>
-      <div className="kpi-progress-track">
-        <div className="kpi-progress-fill" style={{ width: `${importance}%`, background: barColor }} />
+      <div className="h-2 rounded-full bg-slate-900 overflow-hidden border border-white/10">
+        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${importance}%`, background: color }} />
       </div>
     </div>
   );
@@ -46,14 +51,15 @@ function FeatureBar({ label, importance, effect }) {
 
 function CropCard({ crop, rank, isSelected, onClick }) {
   const [showDetail, setShowDetail] = useState(false);
-  const color  = CROP_COLORS[rank - 1] || "var(--leaf)";
-  const bg     = CROP_BG[rank - 1] || "rgba(34,197,94,0.10)";
-  const border = CROP_BORDER[rank - 1] || "rgba(34,197,94,0.28)";
+  const color  = CROP_COLORS[rank - 1] || "#F59E0B";
+  const bg     = CROP_BG[rank - 1] || "rgba(245,158,11,0.15)";
+  const border = CROP_BORDER[rank - 1] || "rgba(245,158,11,0.45)";
+  const cardTheme = CROP_CARD_THEMES[rank - 1] || "card-gold";
 
   return (
     <div
-      className="card p-4 flex flex-col gap-3 cursor-pointer transition-all hover:scale-[1.01]"
-      style={isSelected ? { borderColor: color, boxShadow: `0 0 0 1px ${color}50, 0 4px 24px rgba(0,0,0,0.4)` } : {}}
+      className={`p-4.5 rounded-2xl flex flex-col gap-3 cursor-pointer transition-all duration-200 hover:-translate-y-1 ${cardTheme}`}
+      style={isSelected ? { borderColor: color, boxShadow: `0 0 20px ${color}40` } : {}}
       onClick={onClick}
     >
       {/* Rank Badge + Name */}
@@ -176,41 +182,42 @@ export default function AICropRecommendation({ recommendation, farm, weather, t 
   };
 
   const featureImportance = [
-    { label: "Soil pH & Type",            importance: 32, effect: "positive" },
-    { label: "Temperature Regime",        importance: 26, effect: "positive" },
-    { label: "Seasonal Rainfall",         importance: 22, effect: "positive" },
-    { label: "Soil Moisture (VWC)",       importance: 14, effect: "positive" },
-    { label: "Historical Pest Pressure",  importance: 6,  effect: "negative" },
+    { label: "Soil pH & Chemical Type",   importance: 32, color: "#38BDF8" },
+    { label: "Thermal Microclimate Temp", importance: 26, color: "#F59E0B" },
+    { label: "NWP Seasonal Rainfall",     importance: 22, color: "#818CF8" },
+    { label: "Root Moisture Buffer (VWC)",importance: 14, color: "#4ADE80" },
+    { label: "Historical Blight Hazard",  importance: 6,  color: "#FB7185" },
   ];
 
   return (
-    <div className="space-y-5 anim-fade-up">
-      {/* Header */}
-      <div className="card p-5" style={{ borderLeft: "3px solid var(--leaf)" }}>
-        <div className="flex items-start gap-3.5">
-          <div className="p-2.5 rounded-xl border" style={{ background: "rgba(34,197,94,0.1)", borderColor: "rgba(34,197,94,0.28)" }}>
-            <BrainCircuit className="w-6 h-6" style={{ color: "var(--leaf)" }} />
+    <div className="space-y-6 anim-fade-up">
+      {/* Multi-Color Golden Hero Header */}
+      <div className="card-gold p-6 rounded-3xl border border-amber-500/40 shadow-xl">
+        <div className="flex items-start gap-4">
+          <div className="p-3 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-300 shadow-md">
+            <BrainCircuit className="w-7 h-7" />
           </div>
           <div>
-            <div className="flex items-center gap-2 flex-wrap mb-0.5">
-              <h1 className="text-lg font-bold" style={{ fontFamily: "var(--font-display)", color: "var(--text-100)" }}>
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white font-display">
                 AI Crop Recommendation Engine
               </h1>
-              <span className="badge badge-violet text-[10px]">ML Model v2.1</span>
+              <span className="badge badge-gold text-xs">ML Agro-Model v2.4</span>
+              <span className="badge badge-sky text-xs">ICAR Aligned</span>
             </div>
-            <p className="text-xs" style={{ color: "var(--text-300)" }}>
-              ICAR-calibrated multi-factor suitability model. Ranked crop recommendations with full agronomic justification and government scheme overlay.
+            <p className="text-xs sm:text-sm text-amber-200">
+              ICAR-calibrated multi-factor suitability models. Ranked crop recommendations with full agronomic justification and government MSP overlay.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── LEFT: Parameter Sliders ── */}
-        <div className="card p-5 space-y-5 lg:col-span-1">
-          <div className="flex items-center gap-2 mb-1">
-            <Sliders className="w-4 h-4" style={{ color: "var(--leaf)" }} />
-            <h2 className="text-sm font-bold" style={{ color: "var(--text-100)" }}>Sowing Parameters</h2>
+        <div className="card-leaf p-6 rounded-3xl border border-emerald-500/30 space-y-5 lg:col-span-1 shadow-xl">
+          <div className="flex items-center gap-2 mb-1 border-b border-white/10 pb-3">
+            <Sliders className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-base font-extrabold text-white font-display">Sowing Environment Parameters</h2>
           </div>
 
           {/* Selects */}

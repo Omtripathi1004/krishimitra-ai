@@ -94,117 +94,117 @@ export default function WeatherIntelligence({ weather, t }) {
         </div>
       </div>
 
-      {/* 8-Card Primary Meteorological KPI Grid */}
+      {/* 8-Card Primary Meteorological KPI Grid with Multi-Colored Theming */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
         {/* 1. Ambient Temp */}
-        <div className="stat-card">
+        <div className="card-gold p-3.5 rounded-2xl border border-amber-500/40 shadow-md">
           <div className="flex items-center justify-between">
-            <span className="stat-label">Temp</span>
-            <Thermometer className="w-3.5 h-3.5 text-[var(--warning)]" />
+            <span className="section-eyebrow text-amber-300 text-[10px]">Temp</span>
+            <Thermometer className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <div className="stat-value text-xl font-bold text-white mt-1">
+          <div className="font-mono text-xl font-extrabold text-amber-300 mt-1">
             {temp}°C
           </div>
-          <div className="stat-meta text-[11px] text-[var(--text-muted)]">
+          <div className="text-[10px] text-amber-200 font-mono mt-0.5">
             High: {weather.forecast_days?.[0]?.temp_max || temp + 3}°
           </div>
         </div>
 
         {/* 2. Feels Like */}
-        <div className="stat-card">
+        <div className="card-gold p-3.5 rounded-2xl border border-amber-500/40 shadow-md">
           <div className="flex items-center justify-between">
-            <span className="stat-label">Feels Like</span>
-            <Sun className="w-3.5 h-3.5 text-[var(--harvest)]" />
+            <span className="section-eyebrow text-amber-300 text-[10px]">Feels Like</span>
+            <Sun className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <div className="stat-value text-xl font-bold text-[var(--harvest)] mt-1">
+          <div className="font-mono text-xl font-extrabold text-yellow-300 mt-1">
             {feelsLike}°C
           </div>
-          <div className="stat-meta text-[11px] text-[var(--text-muted)]">
+          <div className="text-[10px] text-amber-200 font-mono mt-0.5">
             Dew: {dewPoint}°C
           </div>
         </div>
 
         {/* 3. Humidity */}
-        <div className="stat-card">
+        <div className="card-sky p-3.5 rounded-2xl border border-sky-500/40 shadow-md">
           <div className="flex items-center justify-between">
-            <span className="stat-label">Humidity</span>
-            <Droplets className="w-3.5 h-3.5 text-[var(--sky)]" />
+            <span className="section-eyebrow text-sky-300 text-[10px]">Humidity</span>
+            <Droplets className="w-3.5 h-3.5 text-sky-400" />
           </div>
-          <div className="stat-value text-xl font-bold text-[var(--sky)] mt-1">
+          <div className="font-mono text-xl font-extrabold text-sky-300 mt-1">
             {humidity}%
           </div>
-          <div className="stat-meta text-[11px] text-[var(--text-muted)]">
+          <div className="text-[10px] text-sky-200 font-mono mt-0.5">
             {humidity > 70 ? "High Spore Risk" : "Optimum Canopy"}
           </div>
         </div>
 
         {/* 4. Wind Speed */}
-        <div className="stat-card">
+        <div className="card-leaf p-3.5 rounded-2xl border border-emerald-500/40 shadow-md">
           <div className="flex items-center justify-between">
-            <span className="stat-label">Wind</span>
-            <Wind className="w-3.5 h-3.5 text-[var(--leaf)]" />
+            <span className="section-eyebrow text-emerald-300 text-[10px]">Wind</span>
+            <Wind className="w-3.5 h-3.5 text-emerald-400" />
           </div>
-          <div className="stat-value text-xl font-bold text-white mt-1">
-            {windSpeed} <span className="text-xs font-normal text-[var(--text-muted)]">km/h</span>
+          <div className="font-mono text-xl font-extrabold text-emerald-300 mt-1">
+            {windSpeed} <span className="text-[10px] text-slate-300 font-normal">km/h</span>
           </div>
-          <div className="stat-meta text-[11px] text-[var(--text-muted)]">
-            Gusts: {(windSpeed * 1.35).toFixed(1)} km/h
+          <div className="text-[10px] text-emerald-200 font-mono mt-0.5">
+            Gusts: {(windSpeed * 1.35).toFixed(1)}k
           </div>
         </div>
 
         {/* 5. Rain Probability */}
-        <div className="stat-card">
+        <div className="card-indigo p-3.5 rounded-2xl border border-indigo-500/40 shadow-md">
           <div className="flex items-center justify-between">
-            <span className="stat-label">Rain Prob</span>
-            <Umbrella className="w-3.5 h-3.5 text-[var(--sky)]" />
+            <span className="section-eyebrow text-indigo-300 text-[10px]">Rain Prob</span>
+            <Umbrella className="w-3.5 h-3.5 text-indigo-400" />
           </div>
-          <div className="stat-value text-xl font-bold text-white mt-1">
+          <div className="font-mono text-xl font-extrabold text-indigo-300 mt-1">
             {rainProbability}%
           </div>
-          <div className="stat-meta text-[11px] text-[var(--text-muted)]">
-            {rainProbability > 40 ? "Rain likely" : "Low precipitation"}
+          <div className="text-[10px] text-indigo-200 font-mono mt-0.5">
+            {rainProbability > 40 ? "Rain likely" : "Low precip"}
           </div>
         </div>
 
         {/* 6. Rainfall (24h / 7d) */}
-        <div className="stat-card">
+        <div className="card-sky p-3.5 rounded-2xl border border-sky-500/40 shadow-md">
           <div className="flex items-center justify-between">
-            <span className="stat-label">Precip (24h)</span>
-            <CloudRain className="w-3.5 h-3.5 text-[var(--sky)]" />
+            <span className="section-eyebrow text-sky-300 text-[10px]">Precip (24h)</span>
+            <CloudRain className="w-3.5 h-3.5 text-sky-400" />
           </div>
-          <div className="stat-value text-xl font-bold text-[var(--sky)] mt-1">
-            {rain24h} <span className="text-xs font-normal text-[var(--text-muted)]">mm</span>
+          <div className="font-mono text-xl font-extrabold text-sky-300 mt-1">
+            {rain24h} <span className="text-[10px] text-slate-300 font-normal">mm</span>
           </div>
-          <div className="stat-meta text-[11px] text-[var(--text-muted)]">
-            7d sum: {rain7d} mm
+          <div className="text-[10px] text-sky-200 font-mono mt-0.5">
+            7d: {rain7d} mm
           </div>
         </div>
 
         {/* 7. UV Index */}
-        <div className="stat-card">
+        <div className="card-pink p-3.5 rounded-2xl border border-rose-500/40 shadow-md">
           <div className="flex items-center justify-between">
-            <span className="stat-label">UV Index</span>
-            <Sun className="w-3.5 h-3.5 text-amber-400" />
+            <span className="section-eyebrow text-rose-300 text-[10px]">UV Index</span>
+            <Sun className="w-3.5 h-3.5 text-rose-400" />
           </div>
-          <div className="stat-value text-xl font-bold text-amber-400 mt-1">
+          <div className="font-mono text-xl font-extrabold text-rose-300 mt-1">
             {uvIndex}
           </div>
-          <div className="stat-meta text-[11px] text-[var(--text-muted)]">
-            {uvIndex >= 8 ? "Very High (Burn)" : uvIndex >= 6 ? "High Radiance" : "Moderate"}
+          <div className="text-[10px] text-rose-200 font-mono mt-0.5">
+            {uvIndex >= 8 ? "Very High" : "Moderate"}
           </div>
         </div>
 
         {/* 8. Pressure */}
-        <div className="stat-card">
+        <div className="card-violet p-3.5 rounded-2xl border border-purple-500/40 shadow-md">
           <div className="flex items-center justify-between">
-            <span className="stat-label">Pressure</span>
-            <Gauge className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+            <span className="section-eyebrow text-purple-300 text-[10px]">Barometer</span>
+            <Gauge className="w-3.5 h-3.5 text-purple-400" />
           </div>
-          <div className="stat-value text-xl font-bold text-white mt-1">
-            {pressure} <span className="text-[10px] font-normal text-[var(--text-muted)]">hPa</span>
+          <div className="font-mono text-xl font-extrabold text-purple-300 mt-1">
+            {pressure}
           </div>
-          <div className="stat-meta text-[11px] text-[var(--text-muted)]">
-            Stable barometer
+          <div className="text-[10px] text-purple-200 font-mono mt-0.5">
+            hPa Normal
           </div>
         </div>
       </div>

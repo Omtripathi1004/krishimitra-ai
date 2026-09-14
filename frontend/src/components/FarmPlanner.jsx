@@ -52,21 +52,21 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="card p-5 sm:p-6 border-l-4 border-l-[var(--leaf)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header (Leaf Neon) */}
+      <div className="card card-leaf p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[var(--primary)]/20 text-[var(--leaf)] border border-[var(--primary)]/30">
+            <div className="p-2.5 rounded-xl bg-emerald-500/15 text-[var(--c-leaf-neon)] border border-emerald-400/30">
               <CalendarDays className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5 font-display">
                 {t?.planner?.title || "Agronomic Schedule & Work Planner"}
-                <span className="badge badge-emerald text-xs">
+                <span className="badge badge-leaf text-xs font-tech">
                   {completedCount} / {tasks.length} Completed
                 </span>
               </h1>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              <p className="text-xs text-emerald-200/80 mt-0.5 font-sans">
                 Seasonal field task orchestration, phenological milestones, and input scheduling
               </p>
             </div>
@@ -76,7 +76,7 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowAddModal(true)}
-            className="btn btn-primary text-xs py-2 px-4 shadow-md"
+            className="btn btn-primary text-xs py-2 px-4 shadow-md font-tech"
           >
             <Plus className="w-4 h-4" />
             <span>{t?.planner?.addTask || "Schedule Activity"}</span>
@@ -84,24 +84,24 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
         </div>
       </div>
 
-      {/* Progress Bar Card */}
-      <div className="card p-4 space-y-2">
+      {/* Progress Bar Card (Indigo Theme) */}
+      <div className="card card-indigo p-4 space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-semibold text-white flex items-center gap-1.5">
-            <CheckSquare className="w-4 h-4 text-[var(--leaf)]" /> Activity Completion Index
+          <span className="font-semibold text-white flex items-center gap-1.5 font-tech">
+            <CheckSquare className="w-4 h-4 text-[var(--c-indigo-neon)]" /> Activity Completion Index
           </span>
-          <span className="font-mono font-bold text-[var(--leaf)]">{progressPercent}%</span>
+          <span className="font-mono font-bold text-[var(--c-indigo-neon)] text-sm">{progressPercent}%</span>
         </div>
         <div className="w-full h-2.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-[var(--primary)] to-[var(--leaf)] rounded-full transition-all duration-500"
+            className="h-full bg-gradient-to-r from-indigo-500 via-sky-400 to-emerald-400 rounded-full transition-all duration-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
       </div>
 
       {/* Category Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin font-tech">
         {categories.map((c) => (
           <button
             key={c.id}
@@ -117,7 +117,7 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
         ))}
       </div>
 
-      {/* Tasks List */}
+      {/* Tasks List (Multi-Color Cards per Category) */}
       <div className="space-y-3">
         {filteredTasks.length === 0 ? (
           <div className="card p-12 text-center text-xs text-[var(--text-muted)]">
@@ -126,11 +126,18 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
         ) : (
           filteredTasks.map((task) => {
             const isCompleted = task.status === "completed";
+            const taskCategory = task.category?.toLowerCase() || "";
+            const cardTheme =
+              taskCategory === "irrigation" ? "card-sky" :
+              taskCategory === "fertilizer" ? "card-gold" :
+              taskCategory === "pest_control" ? "card-pink" :
+              taskCategory === "sowing" || taskCategory === "harvest" ? "card-leaf" : "card-indigo";
+
             return (
               <div
                 key={task.id}
-                className={`card p-4 flex items-center justify-between gap-4 transition-all ${
-                  isCompleted ? "opacity-60 bg-[var(--surface-2)]/50" : ""
+                className={`card ${cardTheme} p-4 flex items-center justify-between gap-4 transition-all ${
+                  isCompleted ? "opacity-50" : ""
                 }`}
               >
                 <div className="flex items-center gap-3.5">
@@ -140,25 +147,25 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
                     title={isCompleted ? "Mark incomplete" : "Mark completed"}
                   >
                     {isCompleted ? (
-                      <CheckCircle2 className="w-5 h-5 text-[var(--leaf)]" />
+                      <CheckCircle2 className="w-5 h-5 text-[var(--c-leaf-neon)]" />
                     ) : (
                       <Circle className="w-5 h-5 text-[var(--text-muted)]" />
                     )}
                   </button>
 
                   <div>
-                    <h4 className={`text-sm font-bold text-white ${isCompleted ? "line-through text-[var(--text-muted)]" : ""}`}>
+                    <h4 className={`text-sm font-bold text-white font-display ${isCompleted ? "line-through text-[var(--text-muted)]" : ""}`}>
                       {task.title}
                     </h4>
                     <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-[var(--text-secondary)]">
-                      <span className="flex items-center gap-1 text-[var(--sky)] font-mono">
+                      <span className="flex items-center gap-1 text-[var(--c-sky-neon)] font-mono">
                         <Clock className="w-3 h-3" />
                         {task.due_date}
                       </span>
                       <span>•</span>
-                      <span className="capitalize text-[var(--leaf)] font-medium">{task.category}</span>
+                      <span className="capitalize text-[var(--c-leaf-neon)] font-medium font-tech">{task.category}</span>
                       <span>•</span>
-                      <span className={`badge text-[10px] py-0.2 px-1.5 ${
+                      <span className={`badge text-[10px] py-0.2 px-1.5 font-tech ${
                         task.priority === "high"
                           ? "badge-critical"
                           : task.priority === "medium"

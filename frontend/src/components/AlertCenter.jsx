@@ -184,21 +184,21 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="card p-5 sm:p-6 border-l-4 border-l-[var(--warning)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header (Golden / Amber Theme) */}
+      <div className="card card-gold p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[var(--warning)]/15 text-[var(--warning)] border border-[var(--warning)]/30">
-              <Bell className="w-6 h-6" />
+            <div className="p-2.5 rounded-xl bg-amber-500/15 text-[var(--c-gold-neon)] border border-amber-400/30">
+              <Bell className="w-6 h-6 animate-bounce" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5 font-display">
                 {t?.alerts?.title || "Agronomic Alert & Advisory Center"}
-                <span className="badge badge-warning text-xs">
+                <span className="badge badge-gold text-xs font-tech">
                   {activeCount} Active Advisories
                 </span>
               </h1>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              <p className="text-xs text-amber-200/80 mt-0.5 font-sans">
                 Automated multi-hazard surveillance for weather, irrigation, plant pathology, and energy grid stability
               </p>
             </div>
@@ -214,7 +214,7 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
                 setResolvedIds(alerts.map((a) => a.id));
               }
             }}
-            className="btn btn-secondary text-xs"
+            className="btn btn-secondary text-xs font-tech"
           >
             {resolvedIds.length === alerts.length ? "Reset All" : "Acknowledge All"}
           </button>
@@ -224,9 +224,9 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
         {/* Category Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs font-tech">
           <span className="text-[var(--text-muted)] font-semibold flex items-center gap-1 mr-1">
-            <Filter className="w-3.5 h-3.5 text-[var(--leaf)]" /> Category:
+            <Filter className="w-3.5 h-3.5 text-[var(--c-leaf-neon)]" /> Category:
           </span>
           {["all", "Weather", "Water", "Crop", "Disease", "Emergency"].map((cat) => (
             <button
@@ -259,7 +259,7 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
           <select
             value={filterSeverity}
             onChange={(e) => setFilterSeverity(e.target.value)}
-            className="bg-[var(--surface)] border border-[var(--border)] text-xs text-white rounded-lg px-2.5 py-1 focus:outline-none focus:border-[var(--primary)]"
+            className="bg-[var(--surface)] border border-[var(--border)] text-xs text-white rounded-lg px-2.5 py-1 focus:outline-none focus:border-[var(--primary)] font-tech"
           >
             <option value="all">All Severities</option>
             <option value="emergency">Emergency / Critical</option>
@@ -278,17 +278,22 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
         ) : (
           filteredAlerts.map((alert) => {
             const isResolved = resolvedIds.includes(alert.id);
+            const cardTheme =
+              alert.severity.toLowerCase() === "emergency" || alert.category.toLowerCase() === "disease"
+                ? "card-pink"
+                : alert.category.toLowerCase() === "water"
+                ? "card-sky"
+                : alert.category.toLowerCase() === "weather"
+                ? "card-indigo"
+                : alert.severity.toLowerCase() === "moderate"
+                ? "card-gold"
+                : "card-leaf";
+
             return (
               <div
                 key={alert.id}
-                className={`card p-5 transition-all border ${
-                  isResolved
-                    ? "opacity-60 border-[var(--border-subtle)] bg-[var(--surface-2)]/50"
-                    : alert.severity.toLowerCase() === "emergency"
-                    ? "border-red-900/50 bg-red-950/10 shadow-md"
-                    : alert.severity.toLowerCase() === "moderate"
-                    ? "border-[var(--warning)]/30 bg-[var(--surface)]"
-                    : "border-[var(--border)] bg-[var(--surface)]"
+                className={`card ${cardTheme} p-5 transition-all ${
+                  isResolved ? "opacity-50" : ""
                 }`}
               >
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
@@ -297,31 +302,31 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
                       <span className="p-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border-subtle)]">
                         {getCategoryIcon(alert.category)}
                       </span>
-                      <span className={`badge text-xs ${getSeverityBadge(alert.severity)}`}>
+                      <span className={`badge text-xs font-tech ${getSeverityBadge(alert.severity)}`}>
                         {alert.severity} Risk
                       </span>
-                      <span className="badge badge-secondary text-xs">
+                      <span className="badge badge-secondary text-xs font-tech">
                         {alert.category}
                       </span>
                       <span className="text-xs text-[var(--text-muted)] font-mono flex items-center gap-1">
                         <Clock className="w-3 h-3" /> {alert.timestamp}
                       </span>
                       <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-[var(--leaf)]" /> {alert.location}
+                        <MapPin className="w-3 h-3 text-[var(--c-leaf-neon)]" /> {alert.location}
                       </span>
                     </div>
 
-                    <h2 className="text-base font-bold text-white">
+                    <h2 className="text-base font-bold text-white font-display">
                       {alert.title}
                     </h2>
 
-                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
                       {alert.description}
                     </p>
 
                     {/* Recommended Action Pill */}
                     <div className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs space-y-1">
-                      <span className="text-[11px] font-bold text-[var(--leaf)] uppercase tracking-wider">
+                      <span className="text-[11px] font-bold text-[var(--c-gold-neon)] uppercase tracking-wider font-tech">
                         Recommended Action:
                       </span>
                       <p className="text-white font-medium">
@@ -333,15 +338,15 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
                   <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-2 flex-shrink-0 pt-1">
                     <button
                       onClick={() => setSelectedAlertForDetails(alert)}
-                      className="btn btn-secondary text-xs flex items-center gap-1.5"
+                      className="btn btn-secondary text-xs flex items-center gap-1.5 font-tech"
                     >
-                      <HelpCircle className="w-3.5 h-3.5 text-[var(--sky)]" />
+                      <HelpCircle className="w-3.5 h-3.5 text-[var(--c-sky-neon)]" />
                       <span>View Details</span>
                     </button>
 
                     <button
                       onClick={() => handleToggleResolve(alert.id)}
-                      className={`btn text-xs flex items-center gap-1.5 ${
+                      className={`btn text-xs flex items-center gap-1.5 font-tech ${
                         isResolved
                           ? "bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]"
                           : "btn-primary"

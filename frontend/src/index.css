@@ -55,6 +55,35 @@
   --critical:            #EF4444;
   --gold:                #E2A83B;
 
+  /* ── Vibrant Multi-Colored Section Palette ── */
+  --c-sky-neon:          #38BDF8;
+  --c-sky-light:         #7DD3FC;
+  --c-sky-deep:          #0284C7;
+  --c-sky-glow:          rgba(56, 189, 248, 0.4);
+
+  --c-indigo-neon:       #818CF8;
+  --c-indigo-deep:       #4F46E5;
+  --c-indigo-light:      #A5B4FC;
+  --c-indigo-glow:       rgba(99, 102, 241, 0.4);
+
+  --c-pink-neon:         #FB7185;
+  --c-pink-deep:         #E11D48;
+  --c-pink-light:        #FDA4AF;
+  --c-pink-glow:         rgba(244, 63, 94, 0.4);
+
+  --c-gold-neon:         #FCD34D;
+  --c-gold-amber:        #F59E0B;
+  --c-gold-deep:         #D97706;
+  --c-gold-glow:         rgba(245, 158, 11, 0.4);
+
+  --c-leaf-neon:         #4ADE80;
+  --c-leaf-deep:         #16A34A;
+  --c-leaf-glow:         rgba(34, 197, 94, 0.4);
+
+  --c-violet-neon:       #C084FC;
+  --c-violet-deep:       #9333EA;
+  --c-violet-glow:       rgba(168, 85, 247, 0.4);
+
   /* ── High-Contrast Clean Text Hierarchy (WCAG AAA Compliant) ── */
   --text-primary:        #FFFFFF;
   --text-secondary:      #E2E8F0; /* crisp, high-visibility slate-200 */
@@ -79,10 +108,12 @@
   --glow-sky:            0 0 24px rgba(56, 189, 248, 0.35);
   --glow-amber:          0 0 24px rgba(251, 191, 36, 0.35);
 
-  /* ── Typography ── */
-  --font-ui:             "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display:        "Sora", "Inter", sans-serif;
-  --font-mono:           "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+  /* ── Distinct Section Typography ── */
+  --font-ui:             "Plus Jakarta Sans", "Inter", -apple-system, sans-serif;
+  --font-display:        "Outfit", "Sora", sans-serif;
+  --font-tech:           "Space Grotesk", sans-serif;
+  --font-headline:       "Outfit", "Space Grotesk", sans-serif;
+  --font-mono:           "JetBrains Mono", "Space Grotesk", monospace;
 
   /* ── Layout ── */
   --sidebar-w:           260px;
@@ -233,14 +264,170 @@ body::before {
 }
 .badge-leaf,
 .badge-emerald  { background: rgba(34,197,94,0.22);  color: #4ADE80; border: 1px solid rgba(34,197,94,0.45); font-weight: 700; }
-.badge-sky      { background: rgba(56,189,248,0.22);  color: #7DD3FC; border: 1px solid rgba(56,189,248,0.45); font-weight: 700; }
+.badge-sky,
+.badge-cyan     { background: rgba(56,189,248,0.22);  color: #7DD3FC; border: 1px solid rgba(56,189,248,0.45); font-weight: 700; }
+.badge-indigo   { background: rgba(99,102,241,0.22); color: #C7D2FE; border: 1px solid rgba(99,102,241,0.45); font-weight: 700; }
+.badge-gold,
 .badge-amber,
 .badge-warning  { background: rgba(251,191,36,0.22);  color: #FDE68A; border: 1px solid rgba(251,191,36,0.45); font-weight: 700; }
+.badge-pink,
 .badge-rose,
-.badge-critical { background: rgba(248,113,113,0.22); color: #FCA5A5; border: 1px solid rgba(248,113,113,0.45); font-weight: 700; }
+.badge-critical { background: rgba(244,63,94,0.22);  color: #FDA4AF; border: 1px solid rgba(244,63,94,0.45); font-weight: 700; }
 .badge-violet   { background: rgba(167,139,250,0.22); color: #C4B5FD; border: 1px solid rgba(167,139,250,0.45); font-weight: 700; }
 .badge-secondary,
 .badge-muted    { background: rgba(255,255,255,0.12); color: #F8FAFC; border: 1px solid rgba(255,255,255,0.25); font-weight: 600; }
+
+/* ── MULTI-COLORED TEXT CLASSES ── */
+.text-sky-neon     { color: #38BDF8 !important; }
+.text-sky-light    { color: #7DD3FC !important; }
+.text-indigo-neon  { color: #818CF8 !important; }
+.text-indigo-light { color: #C7D2FE !important; }
+.text-pink-neon    { color: #FB7185 !important; }
+.text-pink-light   { color: #FDA4AF !important; }
+.text-gold-neon    { color: #FCD34D !important; }
+.text-gold-amber   { color: #F59E0B !important; }
+.text-leaf-neon    { color: #4ADE80 !important; }
+.text-violet-neon  { color: #C084FC !important; }
+
+/* ── MULTI-COLORED TEXT GRADIENTS ── */
+.text-gradient-sky {
+  background: linear-gradient(135deg, #7DD3FC, #38BDF8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-gradient-indigo {
+  background: linear-gradient(135deg, #C7D2FE, #818CF8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-gradient-pink {
+  background: linear-gradient(135deg, #FDA4AF, #FB7185);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-gradient-gold {
+  background: linear-gradient(135deg, #FDE68A, #F59E0B);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-gradient-leaf {
+  background: linear-gradient(135deg, #86EFAC, #22C55E);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-gradient-violet {
+  background: linear-gradient(135deg, #E9D5FF, #C084FC);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── MULTI-COLORED SECTION CARD VARIANTS ── */
+.card-sky {
+  background: linear-gradient(135deg, rgba(8, 24, 36, 0.88), rgba(12, 34, 48, 0.75));
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 4px 24px rgba(56, 189, 248, 0.14);
+}
+.card-sky:hover {
+  border-color: rgba(56, 189, 248, 0.65);
+  box-shadow: 0 8px 36px rgba(56, 189, 248, 0.25);
+}
+
+.card-indigo {
+  background: linear-gradient(135deg, rgba(14, 20, 48, 0.88), rgba(22, 28, 64, 0.75));
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.14);
+}
+.card-indigo:hover {
+  border-color: rgba(99, 102, 241, 0.65);
+  box-shadow: 0 8px 36px rgba(99, 102, 241, 0.25);
+}
+
+.card-pink {
+  background: linear-gradient(135deg, rgba(38, 12, 22, 0.88), rgba(52, 16, 28, 0.75));
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  box-shadow: 0 4px 24px rgba(244, 63, 94, 0.14);
+}
+.card-pink:hover {
+  border-color: rgba(244, 63, 94, 0.65);
+  box-shadow: 0 8px 36px rgba(244, 63, 94, 0.25);
+}
+
+.card-gold {
+  background: linear-gradient(135deg, rgba(38, 28, 8, 0.88), rgba(52, 38, 12, 0.75));
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 24px rgba(245, 158, 11, 0.14);
+}
+.card-gold:hover {
+  border-color: rgba(245, 158, 11, 0.65);
+  box-shadow: 0 8px 36px rgba(245, 158, 11, 0.25);
+}
+
+.card-leaf {
+  background: linear-gradient(135deg, rgba(10, 30, 18, 0.88), rgba(16, 42, 26, 0.75));
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  box-shadow: 0 4px 24px rgba(34, 197, 94, 0.14);
+}
+.card-leaf:hover {
+  border-color: rgba(34, 197, 94, 0.65);
+  box-shadow: 0 8px 36px rgba(34, 197, 94, 0.25);
+}
+
+.card-violet {
+  background: linear-gradient(135deg, rgba(28, 12, 42, 0.88), rgba(42, 18, 62, 0.75));
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 4px 24px rgba(168, 85, 247, 0.14);
+}
+.card-violet:hover {
+  border-color: rgba(168, 85, 247, 0.65);
+  box-shadow: 0 8px 36px rgba(168, 85, 247, 0.25);
+}
+
+/* ── DISTINCT SECTION TYPOGRAPHY HEADERS ── */
+.section-eyebrow {
+  font-family: var(--font-tech);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* ── IMPROVISED GRAPH BAR & CURVE STYLES ── */
+.chart-bar-sky {
+  background: linear-gradient(180deg, #38BDF8 0%, #0284C7 100%);
+  border: 1px solid #7DD3FC;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+.chart-bar-gold {
+  background: linear-gradient(180deg, #FCD34D 0%, #D97706 100%);
+  border: 1px solid #FDE68A;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+.chart-bar-pink {
+  background: linear-gradient(180deg, #FB7185 0%, #E11D48 100%);
+  border: 1px solid #FDA4AF;
+  box-shadow: 0 0 12px rgba(244, 63, 94, 0.4);
+}
+.chart-bar-indigo {
+  background: linear-gradient(180deg, #818CF8 0%, #4338CA 100%);
+  border: 1px solid #C7D2FE;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+}
+.chart-bar-emerald {
+  background: linear-gradient(180deg, #4ADE80 0%, #15803D 100%);
+  border: 1px solid #86EFAC;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+}
 
 /* ── STAT CARD (HIGH CONTRAST & READABILITY) ── */
 .stat-card {
@@ -260,18 +447,19 @@ body::before {
   box-shadow: var(--shadow-card-hover);
 }
 .stat-label {
+  font-family: var(--font-tech);
   font-size: 0.8125rem;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   color: var(--text-300);
 }
 .stat-value {
   font-family: var(--font-mono);
-  font-size: 1.65rem;
-  font-weight: 800;
+  font-size: 1.75rem;
+  font-weight: 900;
   color: var(--text-100);
-  line-height: 1.25;
+  line-height: 1.2;
 }
 .stat-meta {
   font-size: 0.8125rem;

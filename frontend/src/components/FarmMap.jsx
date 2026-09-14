@@ -432,19 +432,19 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
 
   return (
     <div className="space-y-5">
-      {/* Geospatial Map Header */}
-      <div className="card p-5 sm:p-6 border-l-4 border-l-[var(--leaf)] flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg">
+      {/* Geospatial Map Header (Sky Theme) */}
+      <div className="card card-sky p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[var(--primary)]/20 text-[var(--leaf)] border border-[var(--primary)]/30 shadow-sm">
+            <div className="p-2.5 rounded-xl bg-sky-500/15 text-[var(--c-sky-neon)] border border-sky-400/30 shadow-sm">
               <MapPin className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5 font-display">
                 {t?.farmMap?.title || "Agricultural Geospatial Command"}
-                <span className="badge badge-emerald text-xs">Sentinel-2 Ready</span>
+                <span className="badge badge-sky text-xs font-tech">Sentinel-2 Ready</span>
               </h1>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              <p className="text-xs text-sky-200/80 mt-0.5 font-sans">
                 Multi-spectral parcel intelligence, boundary geofencing, and precision pointer tracking
               </p>
             </div>
@@ -686,33 +686,33 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
         )}
       </div>
 
-      {/* Geospatial Insights Strip */}
+      {/* Geospatial Insights Strip (Multi-Color Cards) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="card p-4 space-y-1">
-          <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Topographic Gradient</span>
-          <div className="text-base font-bold text-white flex items-center justify-between">
+        <div className="card card-leaf p-4 space-y-1">
+          <span className="text-xs font-bold text-[var(--c-leaf-neon)] uppercase tracking-wider font-tech">Topographic Gradient</span>
+          <div className="text-base font-bold text-white flex items-center justify-between font-display">
             <span>Slope &lt; 1.5% (Flat)</span>
-            <span className="badge badge-emerald text-xs">Low Runoff</span>
+            <span className="badge badge-leaf text-xs font-tech">Low Runoff</span>
           </div>
-          <p className="text-[11px] text-[var(--text-secondary)]">Minimal erosion hazard; suitable for mechanized broad-furrow cultivation.</p>
+          <p className="text-[11px] text-emerald-200/80 font-sans">Minimal erosion hazard; suitable for mechanized broad-furrow cultivation.</p>
         </div>
 
-        <div className="card p-4 space-y-1">
-          <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Geospatial Soil Zone</span>
-          <div className="text-base font-bold text-white flex items-center justify-between">
+        <div className="card card-sky p-4 space-y-1">
+          <span className="text-xs font-bold text-[var(--c-sky-neon)] uppercase tracking-wider font-tech">Geospatial Soil Zone</span>
+          <div className="text-base font-bold text-white flex items-center justify-between font-display">
             <span>{farm?.soil_type || "Alluvial Loam"}</span>
-            <span className="badge badge-sky text-xs">High CEC</span>
+            <span className="badge badge-sky text-xs font-tech">High CEC</span>
           </div>
-          <p className="text-[11px] text-[var(--text-secondary)]">Excellent water retention with depth-to-bedrock exceeding 180 cm.</p>
+          <p className="text-[11px] text-sky-200/80 font-sans">Excellent water retention with depth-to-bedrock exceeding 180 cm.</p>
         </div>
 
-        <div className="card p-4 space-y-1">
-          <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">Canopy Cover Index</span>
-          <div className="text-base font-bold text-white flex items-center justify-between">
+        <div className="card card-indigo p-4 space-y-1">
+          <span className="text-xs font-bold text-[var(--c-indigo-neon)] uppercase tracking-wider font-tech">Canopy Cover Index</span>
+          <div className="text-base font-bold text-white flex items-center justify-between font-display">
             <span>0.72 Fractional Cover</span>
-            <span className="badge badge-emerald text-xs">Healthy</span>
+            <span className="badge badge-indigo text-xs font-tech">Healthy</span>
           </div>
-          <p className="text-[11px] text-[var(--text-secondary)]">Multi-spectral reflectance indicates robust leaf area index (LAI 3.4).</p>
+          <p className="text-[11px] text-indigo-200/80 font-sans">Multi-spectral reflectance indicates robust leaf area index (LAI 3.4).</p>
         </div>
       </div>
     </div>

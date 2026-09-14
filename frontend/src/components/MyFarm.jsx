@@ -160,19 +160,19 @@ export default function MyFarm({ farm, onUpdateFarm, t }) {
 
   return (
     <div className="space-y-6">
-      {/* Header with Agro-Climatic Presets */}
-      <div className="card p-5 sm:p-6 border-l-4 border-l-[var(--leaf)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header with Agro-Climatic Presets (Leaf Neon Card) */}
+      <div className="card card-leaf p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[var(--primary)]/20 text-[var(--leaf)] border border-[var(--primary)]/30">
+            <div className="p-2.5 rounded-xl bg-emerald-500/15 text-[var(--c-leaf-neon)] border border-emerald-400/30">
               <Sprout className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5 font-display">
                 {t?.myFarm?.title || "Farm Intelligence Profile"}
-                <span className="badge badge-emerald text-xs">Active Parcel</span>
+                <span className="badge badge-leaf text-xs font-tech">Active Parcel</span>
               </h1>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              <p className="text-xs text-emerald-200/80 mt-0.5 font-sans">
                 Soil chemical characteristics, geofence coordinates, and agronomic baseline configuration
               </p>
             </div>
@@ -218,11 +218,11 @@ export default function MyFarm({ farm, onUpdateFarm, t }) {
         </div>
       </div>
 
-      {/* Main Farm Configuration Form */}
+      {/* Main Farm Configuration Form (3 Multi-Color Columns) */}
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: General Geofence Profile */}
-        <div className="card p-6 space-y-4">
-          <div className="flex items-center gap-2 text-xs font-bold text-[var(--leaf)] uppercase tracking-wider border-b border-[var(--border)] pb-3">
+        {/* Left Column: General Geofence Profile (Sky Neon Card) */}
+        <div className="card card-sky p-6 space-y-4">
+          <div className="flex items-center gap-2 text-xs font-bold text-[var(--c-sky-neon)] uppercase tracking-wider border-b border-sky-400/20 pb-3 font-tech">
             <MapPin className="w-4 h-4" />
             <span>Geospatial Holding Identity</span>
           </div>
@@ -312,14 +312,14 @@ export default function MyFarm({ farm, onUpdateFarm, t }) {
           </div>
         </div>
 
-        {/* Center Column: Soil Chemistry & Testing Parameters */}
-        <div className="card p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
-            <div className="flex items-center gap-2 text-xs font-bold text-[var(--harvest)] uppercase tracking-wider">
+        {/* Center Column: Soil Chemistry & Testing Parameters (Gold Neon Card) */}
+        <div className="card card-gold p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-amber-400/20 pb-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-[var(--c-gold-neon)] uppercase tracking-wider font-tech">
               <Layers className="w-4 h-4" />
               <span>Soil Chemistry & Nutrients</span>
             </div>
-            <span className="badge badge-emerald text-[10px]">ICAR Aligned</span>
+            <span className="badge badge-gold text-[10px] font-tech">ICAR Aligned</span>
           </div>
 
           <div className="space-y-4 text-xs">
@@ -412,10 +412,10 @@ export default function MyFarm({ farm, onUpdateFarm, t }) {
           </div>
         </div>
 
-        {/* Right Column: Crop Stand & Infrastructure */}
-        <div className="card p-6 space-y-4 flex flex-col justify-between">
+        {/* Right Column: Crop Stand & Infrastructure (Deep Indigo Card) */}
+        <div className="card card-indigo p-6 space-y-4 flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-[var(--sky)] uppercase tracking-wider border-b border-[var(--border)] pb-3">
+            <div className="flex items-center gap-2 text-xs font-bold text-[var(--c-indigo-neon)] uppercase tracking-wider border-b border-indigo-400/20 pb-3 font-tech">
               <Droplets className="w-4 h-4" />
               <span>Agronomic Infrastructure</span>
             </div>

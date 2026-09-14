@@ -93,21 +93,21 @@ export default function ViksitBharat({ t }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="card p-5 sm:p-6 border-l-4 border-l-[var(--harvest)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header (Golden / Amber Theme) */}
+      <div className="card card-gold p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-[var(--harvest)]/15 text-[var(--harvest)] border border-[var(--harvest)]/30">
+            <div className="p-2.5 rounded-xl bg-amber-500/15 text-[var(--c-gold-neon)] border border-amber-400/30">
               <Building2 className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5 font-display">
                 {t?.viksitBharat?.title || "Viksit Bharat National Agro Intelligence"}
-                <span className="badge badge-emerald text-xs font-semibold">
+                <span className="badge badge-gold text-xs font-semibold font-tech">
                   {data.metadata?.last_verified || "Verified"} Release
                 </span>
               </h1>
-              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              <p className="text-xs text-amber-200/80 mt-0.5 font-sans">
                 Official Ministry of Agriculture & Farmers Welfare datasets, Minimum Support Prices, and state metrics
               </p>
             </div>
@@ -115,7 +115,7 @@ export default function ViksitBharat({ t }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="badge badge-emerald text-xs flex items-center gap-1.5 py-1.5 px-3">
+          <span className="badge badge-gold text-xs flex items-center gap-1.5 py-1.5 px-3 font-tech">
             <ShieldCheck className="w-4 h-4" />
             <span>CCEA Official Alignment</span>
           </span>
@@ -123,20 +123,20 @@ export default function ViksitBharat({ t }) {
       </div>
 
       {/* Official Disclaimer Banner */}
-      <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] text-xs text-[var(--text-secondary)] flex items-center gap-2">
-        <Info className="w-4 h-4 text-[var(--sky)] flex-shrink-0" />
+      <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--c-gold-border)] text-xs text-amber-200/80 flex items-center gap-2 font-tech">
+        <Info className="w-4 h-4 text-[var(--c-gold-neon)] flex-shrink-0" />
         <span>{data.metadata?.disclaimer || "Official public data sourced from CCEA releases and Directorate of Economics & Statistics."}</span>
       </div>
 
-      {/* Section 1: Verified MSP Rates 2024-25 Table */}
-      <div className="card p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border)] pb-3">
+      {/* Section 1: Verified MSP Rates 2024-25 Table (Gold Card) */}
+      <div className="card card-gold p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-400/20 pb-3">
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Award className="w-4 h-4 text-[var(--harvest)]" />
+            <h2 className="text-base font-bold text-white flex items-center gap-2 font-display">
+              <Award className="w-4 h-4 text-[var(--c-gold-neon)]" />
               {t?.viksitBharat?.mspTitle || "Cabinet Committee on Economic Affairs (CCEA) MSP Rates"}
             </h2>
-            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+            <p className="text-xs text-amber-200/70 mt-0.5 font-tech">
               Mandated 50% minimum margin over All-India weighted average cost of production
             </p>
           </div>
@@ -251,13 +251,13 @@ export default function ViksitBharat({ t }) {
         </div>
       </div>
 
-      {/* Section 2: State-wise Production Leadership */}
+      {/* Section 2: State-wise Production Leadership (Deep Indigo Cards) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {(production.datasets || []).map((d, idx) => (
-          <div key={idx} className="card p-6 space-y-4">
-            <div className="border-b border-[var(--border)] pb-3">
-              <h3 className="text-base font-bold text-white">{d.commodity}</h3>
-              <div className="flex items-center justify-between mt-1 text-xs font-mono text-[var(--text-secondary)]">
+          <div key={idx} className="card card-indigo p-6 space-y-4">
+            <div className="border-b border-indigo-400/20 pb-3">
+              <h3 className="text-base font-bold text-white font-display">{d.commodity}</h3>
+              <div className="flex items-center justify-between mt-1 text-xs font-mono text-indigo-200/80 font-tech">
                 <span>National Output: <strong className="text-white">{d.national_total_mt} MT</strong></span>
                 <span>DES, MoA&FW Verified</span>
               </div>
@@ -266,13 +266,13 @@ export default function ViksitBharat({ t }) {
             <div className="space-y-3 font-mono">
               {d.top_states.map((st, i) => (
                 <div key={i} className="space-y-1 text-xs">
-                  <div className="flex justify-between text-[var(--text-secondary)]">
+                  <div className="flex justify-between text-indigo-200/80">
                     <span className="font-semibold text-white font-sans">{i + 1}. {st.state}</span>
-                    <span>{st.production_mt} MT ({st.share_pct}%)</span>
+                    <span className="font-tech">{st.production_mt} MT ({st.share_pct}%)</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-[var(--surface-2)] overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-[var(--primary)] to-[var(--harvest)] rounded-full transition-all duration-500"
+                      className="h-full bg-gradient-to-r from-indigo-500 to-amber-400 rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"
                       style={{ width: `${(st.production_mt / d.top_states[0].production_mt) * 100}%` }}
                     />
                   </div>
@@ -283,37 +283,37 @@ export default function ViksitBharat({ t }) {
         ))}
       </div>
 
-      {/* Section 3: Verified Government Schemes & Portals */}
-      <div className="card p-6 space-y-4">
-        <div className="border-b border-[var(--border)] pb-3">
-          <h3 className="text-base font-bold text-white">{t?.viksitBharat?.schemesTitle || "Verified Flagship Schemes"}</h3>
-          <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+      {/* Section 3: Verified Government Schemes & Portals (Emerald Leaf Theme) */}
+      <div className="card card-leaf p-6 space-y-4">
+        <div className="border-b border-emerald-400/20 pb-3">
+          <h3 className="text-base font-bold text-white font-display">{t?.viksitBharat?.schemesTitle || "Verified Flagship Schemes"}</h3>
+          <p className="text-xs text-emerald-200/70 mt-0.5 font-tech">
             Direct benefit transfers, interest subventions, and safety nets for Indian agriculturalists
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(schemes || []).map((s, idx) => (
-            <div key={idx} className="p-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] text-xs space-y-2.5">
+            <div key={idx} className="p-4 rounded-xl border border-[var(--c-leaf-border)] bg-[var(--surface-2)] text-xs space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-white text-sm">{s.scheme_name}</span>
-                <span className="badge badge-emerald text-[10px]">
+                <span className="font-bold text-white text-sm font-display">{s.scheme_name}</span>
+                <span className="badge badge-leaf text-[10px] font-tech">
                   {s.status}
                 </span>
               </div>
               <div className="text-[var(--text-secondary)]">
-                Benefit: <span className="text-[var(--harvest)] font-bold">{s.benefit}</span>
+                Benefit: <span className="text-[var(--c-gold-neon)] font-bold font-mono">{s.benefit}</span>
               </div>
-              <div className="text-[var(--text-muted)] leading-relaxed">
+              <div className="text-[var(--text-muted)] leading-relaxed font-sans">
                 Eligibility: {s.eligibility}
               </div>
-              <div className="pt-2 border-t border-[var(--border-subtle)] flex justify-between items-center">
+              <div className="pt-2 border-t border-[var(--border-subtle)] flex justify-between items-center font-tech">
                 <span className="text-[11px] text-[var(--text-muted)]">{s.ministry}</span>
                 <a
                   href={s.verification_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-[var(--leaf)] hover:underline font-semibold text-xs"
+                  className="flex items-center gap-1 text-[var(--c-leaf-neon)] hover:underline font-semibold text-xs"
                 >
                   <span>{t?.viksitBharat?.officialPortal || "Official Portal"}</span>
                   <ExternalLink className="w-3.5 h-3.5" />
