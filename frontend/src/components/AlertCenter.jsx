@@ -14,13 +14,16 @@ import {
   ChevronDown,
   ChevronUp,
   MapPin,
-  Clock
+  Clock,
+  HelpCircle,
+  X
 } from "lucide-react";
 
 export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterSeverity, setFilterSeverity] = useState("all");
-  const [expandedAlertId, setExpandedAlertId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedAlertForDetails, setSelectedAlertForDetails] = useState(null);
   const [resolvedIds, setResolvedIds] = useState([]);
 
   const alerts = [
@@ -29,14 +32,19 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
       category: "Water",
       title: "Optimized Irrigation Deferral Advised",
       severity: "Moderate",
-      location: `${farm?.farm_name || "Plot A"} — Varanasi Sub-district`,
+      location: `${farm?.farm_name || "Plot A"} — Sub-district Sector 3`,
       timestamp: "Today, 08:30 AM",
-      description: "Root zone volumetric water content is currently 68%, combined with 14.5mm forecast precipitation over the next 48 hours. Excessive irrigation now will cause root hypoxia and nitrogen runoff.",
+      description: "Root zone volumetric water content is currently 68%, combined with 14.5mm forecast precipitation over the next 48 hours. Excessive irrigation now will cause root hypoxia and nitrogen leaching.",
       recommendedAction: "Defer scheduled 36-hour drip cycle. Re-evaluate probe metrics after convective rain window passes.",
       details: {
         sensorReading: "Volumetric Water Content: 68% (Target: 55-70%)",
         forecastSource: "IMD / Open-Meteo High Resolution NWP Model",
-        estimatedWaterSaved: "320 Cubic Meters (₹850 pumping diesel savings)"
+        estimatedWaterSaved: "320 Cubic Meters (₹850 pumping diesel savings)",
+        mitigationSteps: [
+          "Ensure secondary drain sluices are free of debris.",
+          "Pause automated timer for Zone 2 drip solenoid valves.",
+          "Log soil tensiometer readings at 18:00 hrs."
+        ]
       }
     },
     {
@@ -44,64 +52,80 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
       category: "Weather",
       title: "Gusty Winds & Convective Cloud Pre-Alert",
       severity: "Moderate",
-      location: `${farm?.district || "Varanasi"}, ${farm?.state || "Uttar Pradesh"}`,
+      location: `${farm?.location_name || "Regional Block"}`,
       timestamp: "Today, 06:15 AM",
-      description: "Forecast indicates localized convective cloud buildup with wind gusts up to 28 km/h between 02:00 PM and 05:00 PM. High droplet drift makes spraying ineffective.",
+      description: "Forecast indicates localized convective cloud buildup with wind gusts up to 28 km/h between 02:00 PM and 05:00 PM. High droplet drift makes chemical spraying ineffective.",
       recommendedAction: "Complete micronutrient or pesticide foliar spray before 11:30 AM or postpone to tomorrow morning.",
       details: {
-        windThreshold: "Spray safety cutoff: 15 km/h (Forecast: 28 km/h)",
-        sprayEfficiencyImpact: "-45% chemical adherence if sprayed in gust conditions",
-        alternateWindow: "Tomorrow 06:00 AM - 09:30 AM (Wind < 8 km/h)"
+        windThreshold: "Spray safety cutoff: 15 km/h (Forecast: 28 km/h gusts)",
+        sprayEfficiencyImpact: "-45% chemical adherence if sprayed during gust window",
+        alternateWindow: "Tomorrow 06:00 AM - 09:30 AM (Wind < 8 km/h)",
+        mitigationSteps: [
+          "Secure greenhouse netting and nursery shade tunnels.",
+          "Check tractor spray nozzle pressure if early morning application is attempted."
+        ]
       }
     },
     {
       id: "alt-3",
       category: "Disease",
-      title: "Favorable RH Corridor for Yellow Rust Surveillance",
+      title: "Favorable Microclimate Corridor for Yellow Rust Surveillance",
       severity: "Low",
-      location: `${farm?.farm_name || "Main Block"} — Northern Furrow`,
+      location: `${farm?.farm_name || "Main Holding"} — Northern Furrow`,
       timestamp: "Yesterday, 05:45 PM",
       description: "Relative humidity sustained above 65% for 14 hours with night temperatures around 16°C creates initial incubation conditions for Puccinia striiformis (Yellow Rust) in susceptible cereal cultivars.",
-      recommendedAction: "Conduct random transect walk across north-facing field boundary; check lower leaf canopy for yellow spore pustules.",
+      recommendedAction: "Conduct random transect walk across north-facing field boundary; inspect lower canopy for yellow spore pustules.",
       details: {
-        susceptibleVarieties: "PBW-343, HD-2967 (if un-certified seed used)",
-        prophylacticMeasure: "Propiconazole 25% EC (1ml / Liter water) only if active lesions detected.",
-        expertHelpline: "KVK Varanasi Agronomy Line: 0542-2612345"
+        susceptibleVarieties: "PBW-343, HD-2967 (if uncertified seed stock was sown)",
+        prophylacticMeasure: "Propiconazole 25% EC (1ml / Liter water) only if active lesions are observed.",
+        expertHelpline: "KVK Regional Agronomy Support: 1800-180-1551",
+        mitigationSteps: [
+          "Inspect 20 random flag leaves across 5 field sample quadrants.",
+          "Photograph suspicious leaf symptoms for Krishi Assistant AI diagnosis."
+        ]
       }
     },
     {
       id: "alt-4",
       category: "Crop",
-      title: "Sowing Window Optimization Reminder",
+      title: "Optimal Sowing Window Thermal Alignment",
       severity: "Low",
       location: "Farm Planning Unit",
       timestamp: "2 days ago",
-      description: "Soil temperatures have reached the ideal 20°C - 24°C bracket for high-yielding Rabi Wheat and Mustard companion cultivation.",
-      recommendedAction: "Finalize land preparation, basal dose NPK application (120:60:40), and certified seed procurement before mid-November.",
+      description: "Topsoil temperatures (0-10cm) have reached the ideal 20°C - 24°C bracket for high-yielding Rabi Wheat and Mustard companion cultivation.",
+      recommendedAction: "Finalize land preparation, basal dose NPK application (120:60:40), and certified seed procurement before mid-month.",
       details: {
         optimumSowingWindow: "October 25 - November 15",
-        expectedYieldBonus: "+12% yield retention compared to delayed December sowing",
-        seedTreatment: "Carbendazim + Thiram (2:1) @ 2.5g/kg seed"
+        expectedYieldBonus: "+12% yield retention compared to late December sowing",
+        seedTreatment: "Carbendazim + Thiram (2:1) @ 2.5g/kg seed",
+        mitigationSteps: [
+          "Calibrate seed drill depth to 4-5 cm.",
+          "Ensure certified seed tag verification."
+        ]
       }
     },
     {
       id: "alt-5",
       category: "Emergency",
-      title: "High Voltage Grid Interruption Scheduled",
+      title: "Rural High Voltage Feeder Maintenance Interruption",
       severity: "Emergency",
-      location: "Varanasi Rural Feeder #4",
+      location: "Rural Feeder Substation #4",
       timestamp: "Today, 07:00 AM",
-      description: "Rural electricity transmission maintenance will affect feeder #4 from 11:00 AM to 03:00 PM. Electric pumps will not have grid supply.",
-      recommendedAction: "Rely on solar DC drip system for nursery beds or charge storage cisterns before 10:30 AM.",
+      description: "Rural electricity transmission grid maintenance will interrupt power on Feeder #4 between 11:00 AM and 03:00 PM. Electric borewell pumps will be non-operational.",
+      recommendedAction: "Rely on solar DC drip pumping system for nursery beds or pre-fill farm storage ponds prior to 10:30 AM.",
       details: {
-        feederAgency: "UPPCL Rural Distribution Division",
+        feederAgency: "State Rural Power Distribution Division",
         solarBackupStatus: "5.2 kWh Solar Array active and online",
-        affectedEquipment: "Primary 7.5 HP Submersible Borewell"
+        affectedEquipment: "Primary 7.5 HP Submersible Borewell",
+        mitigationSteps: [
+          "Fill elevated storage cisterns before 10:30 AM.",
+          "Ensure solar inverter battery bank is on auto-transfer mode."
+        ]
       }
     }
   ];
 
-  const handleResolve = (id) => {
+  const handleToggleResolve = (id) => {
     setResolvedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
@@ -114,6 +138,14 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
     if (filterSeverity !== "all" && item.severity.toLowerCase() !== filterSeverity.toLowerCase()) {
       return false;
     }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return (
+        item.title.toLowerCase().includes(q) ||
+        item.description.toLowerCase().includes(q) ||
+        item.location.toLowerCase().includes(q)
+      );
+    }
     return true;
   });
 
@@ -121,69 +153,89 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
     switch (sev.toLowerCase()) {
       case "emergency":
       case "critical":
-        return "bg-red-950/70 text-red-400 border-red-800/80 font-bold";
+        return "badge-critical";
       case "high":
-        return "bg-amber-950/70 text-amber-400 border-amber-800/80 font-bold";
+        return "badge-warning";
       case "moderate":
-        return "bg-yellow-950/60 text-yellow-400 border-yellow-800/70 font-semibold";
+        return "badge-warning";
       default:
-        return "bg-emerald-950/60 text-emerald-400 border-emerald-800/70 font-semibold";
+        return "badge-emerald";
     }
   };
 
+  const getCategoryIcon = (cat) => {
+    switch (cat.toLowerCase()) {
+      case "water":
+        return <Droplets className="w-4 h-4 text-[var(--sky)]" />;
+      case "weather":
+        return <CloudLightning className="w-4 h-4 text-[var(--warning)]" />;
+      case "disease":
+        return <ShieldAlert className="w-4 h-4 text-red-400" />;
+      case "crop":
+        return <Sprout className="w-4 h-4 text-[var(--leaf)]" />;
+      case "emergency":
+        return <AlertTriangle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Bell className="w-4 h-4 text-[var(--leaf)]" />;
+    }
+  };
+
+  const activeCount = alerts.length - resolvedIds.length;
+
   return (
     <div className="space-y-6">
-      {/* Alert Center Header */}
-      <div className="command-card p-6 border-l-4 border-l-amber-500">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="p-3.5 rounded-xl bg-amber-950/60 border border-amber-800/60 text-amber-400">
-              <Bell className="w-7 h-7" />
+      {/* Header */}
+      <div className="card p-5 sm:p-6 border-l-4 border-l-[var(--warning)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-[var(--warning)]/15 text-[var(--warning)] border border-[var(--warning)]/30">
+              <Bell className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold tracking-tight text-white">Agronomic Alert & Advisory Center</h2>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-950/80 text-amber-400 border border-amber-800">
-                  {alerts.length - resolvedIds.length} Active Alerts
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+                {t?.alerts?.title || "Agronomic Alert & Advisory Center"}
+                <span className="badge badge-warning text-xs">
+                  {activeCount} Active Advisories
                 </span>
-              </div>
-              <p className="text-xs text-slate-300 mt-1">
-                Real-time actionable telemetry notifications for weather, irrigation, pest vector risks, and power infrastructure.
+              </h1>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                Automated multi-hazard surveillance for weather, irrigation, plant pathology, and energy grid stability
               </p>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                if (resolvedIds.length === alerts.length) {
-                  setResolvedIds([]);
-                } else {
-                  setResolvedIds(alerts.map(a => a.id));
-                }
-              }}
-              className="btn btn-secondary text-xs"
-            >
-              {resolvedIds.length === alerts.length ? "Reset All" : "Mark All Acknowledged"}
-            </button>
-          </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (resolvedIds.length === alerts.length) {
+                setResolvedIds([]);
+              } else {
+                setResolvedIds(alerts.map((a) => a.id));
+              }
+            }}
+            className="btn btn-secondary text-xs"
+          >
+            {resolvedIds.length === alerts.length ? "Reset All" : "Acknowledge All"}
+          </button>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-slate-400 flex items-center gap-1 mr-1">
-            <Filter className="w-3.5 h-3.5 text-emerald-400" /> Category:
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border)]">
+        {/* Category Tabs */}
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="text-[var(--text-muted)] font-semibold flex items-center gap-1 mr-1">
+            <Filter className="w-3.5 h-3.5 text-[var(--leaf)]" /> Category:
           </span>
           {["all", "Weather", "Water", "Crop", "Disease", "Emergency"].map((cat) => (
             <button
               key={cat}
               onClick={() => setFilterCategory(cat.toLowerCase())}
-              className={`px-2.5 py-1 rounded text-xs font-semibold transition-all ${
+              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
                 filterCategory === cat.toLowerCase()
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "bg-slate-800/80 text-slate-300 hover:text-white border border-slate-700/60"
+                  ? "bg-[var(--primary)] text-white shadow-sm"
+                  : "text-[var(--text-secondary)] hover:text-white bg-[var(--surface)] border border-[var(--border-subtle)]"
               }`}
             >
               {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -191,142 +243,211 @@ export default function AlertCenter({ farm, weather, smartIrrigation, t }) {
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-400">Severity:</span>
+        {/* Severity Selector & Search */}
+        <div className="flex items-center gap-2.5">
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+            <input
+              type="text"
+              placeholder="Search advisories..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 pr-3 py-1 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-xs text-white focus:outline-none focus:border-[var(--primary)]"
+            />
+          </div>
+
           <select
             value={filterSeverity}
             onChange={(e) => setFilterSeverity(e.target.value)}
-            className="bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:border-emerald-500"
+            className="bg-[var(--surface)] border border-[var(--border)] text-xs text-white rounded-lg px-2.5 py-1 focus:outline-none focus:border-[var(--primary)]"
           >
             <option value="all">All Severities</option>
             <option value="emergency">Emergency / Critical</option>
-            <option value="high">High</option>
             <option value="moderate">Moderate</option>
             <option value="low">Low</option>
           </select>
         </div>
       </div>
 
-      {/* Alerts List */}
+      {/* Alerts Feed */}
       <div className="space-y-4">
         {filteredAlerts.length === 0 ? (
-          <div className="command-card p-12 text-center">
-            <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto mb-3" />
-            <div className="text-base font-bold text-white">No active alerts matching your filter</div>
-            <p className="text-xs text-slate-400 mt-1">All agricultural systems and risk indicators are operating within normal parameters.</p>
+          <div className="card p-12 text-center text-xs text-[var(--text-muted)]">
+            No active alerts found matching current filters.
           </div>
         ) : (
           filteredAlerts.map((alert) => {
             const isResolved = resolvedIds.includes(alert.id);
-            const isExpanded = expandedAlertId === alert.id;
-
             return (
               <div
                 key={alert.id}
-                className={`command-card transition-all ${
+                className={`card p-5 transition-all border ${
                   isResolved
-                    ? "opacity-60 bg-slate-950/40 border-slate-800/40"
-                    : alert.severity === "Emergency"
-                    ? "border-red-800/80 bg-slate-900/90"
-                    : "hover:border-slate-700"
+                    ? "opacity-60 border-[var(--border-subtle)] bg-[var(--surface-2)]/50"
+                    : alert.severity.toLowerCase() === "emergency"
+                    ? "border-red-900/50 bg-red-950/10 shadow-md"
+                    : alert.severity.toLowerCase() === "moderate"
+                    ? "border-[var(--warning)]/30 bg-[var(--surface)]"
+                    : "border-[var(--border)] bg-[var(--surface)]"
                 }`}
               >
-                <div className="p-5">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-lg bg-slate-800 text-emerald-400 border border-slate-700 mt-0.5">
-                        {alert.category === "Water" && <Droplets className="w-4 h-4 text-sky-400" />}
-                        {alert.category === "Weather" && <CloudLightning className="w-4 h-4 text-amber-400" />}
-                        {alert.category === "Disease" && <AlertTriangle className="w-4 h-4 text-rose-400" />}
-                        {alert.category === "Crop" && <Sprout className="w-4 h-4 text-emerald-400" />}
-                        {alert.category === "Emergency" && <Flame className="w-4 h-4 text-red-500" />}
-                      </div>
-
-                      <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className={`text-sm font-bold ${isResolved ? "line-through text-slate-400" : "text-white"}`}>
-                            {alert.title}
-                          </h3>
-                          <span className={`px-2 py-0.5 rounded text-[10px] uppercase tracking-wider border ${getSeverityBadge(alert.severity)}`}>
-                            {alert.severity}
-                          </span>
-                          <span className="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700">
-                            {alert.category}
-                          </span>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400 mt-1.5">
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-slate-400" /> {alert.location}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-slate-400" /> {alert.timestamp}
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-slate-300 mt-2.5 leading-relaxed">
-                          {alert.description}
-                        </p>
-                      </div>
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                  <div className="space-y-2 flex-1">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <span className="p-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border-subtle)]">
+                        {getCategoryIcon(alert.category)}
+                      </span>
+                      <span className={`badge text-xs ${getSeverityBadge(alert.severity)}`}>
+                        {alert.severity} Risk
+                      </span>
+                      <span className="badge badge-secondary text-xs">
+                        {alert.category}
+                      </span>
+                      <span className="text-xs text-[var(--text-muted)] font-mono flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {alert.timestamp}
+                      </span>
+                      <span className="text-xs text-[var(--text-muted)] flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-[var(--leaf)]" /> {alert.location}
+                      </span>
                     </div>
 
-                    <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                      <button
-                        onClick={() => handleResolve(alert.id)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
-                          isResolved
-                            ? "bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700"
-                            : "bg-emerald-900/60 text-emerald-300 border-emerald-700 hover:bg-emerald-800"
-                        }`}
-                      >
-                        {isResolved ? "Re-open" : "Acknowledge"}
-                      </button>
+                    <h2 className="text-base font-bold text-white">
+                      {alert.title}
+                    </h2>
 
-                      <button
-                        onClick={() => setExpandedAlertId(isExpanded ? null : alert.id)}
-                        className="p-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700"
-                        title={isExpanded ? "Collapse Details" : "View Details"}
-                      >
-                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      {alert.description}
+                    </p>
 
-                  {/* Recommended Action Pill */}
-                  <div className="mt-4 p-3 rounded-lg bg-slate-900/70 border border-slate-800 flex items-start gap-2.5">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />
-                    <div>
-                      <span className="text-[11px] uppercase font-bold text-emerald-400 mr-2">
+                    {/* Recommended Action Pill */}
+                    <div className="p-3 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs space-y-1">
+                      <span className="text-[11px] font-bold text-[var(--leaf)] uppercase tracking-wider">
                         Recommended Action:
                       </span>
-                      <span className="text-xs text-slate-200">{alert.recommendedAction}</span>
+                      <p className="text-white font-medium">
+                        {alert.recommendedAction}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Collapsible Details */}
-                  {isExpanded && alert.details && (
-                    <div className="mt-3 pt-3 border-t border-slate-800/80 text-xs space-y-2 bg-slate-950/40 p-3 rounded-lg">
-                      <div className="text-[11px] font-bold uppercase text-slate-400 tracking-wider">
-                        Technical Telemetry & Diagnostics
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        {Object.entries(alert.details).map(([key, val]) => (
-                          <div key={key} className="p-2 rounded bg-slate-900 border border-slate-800">
-                            <div className="text-[10px] text-slate-400 capitalize font-medium">
-                              {key.replace(/([A-Z])/g, " $1")}
-                            </div>
-                            <div className="text-xs font-semibold text-slate-200 mt-0.5">{val}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-2 flex-shrink-0 pt-1">
+                    <button
+                      onClick={() => setSelectedAlertForDetails(alert)}
+                      className="btn btn-secondary text-xs flex items-center gap-1.5"
+                    >
+                      <HelpCircle className="w-3.5 h-3.5 text-[var(--sky)]" />
+                      <span>View Details</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleToggleResolve(alert.id)}
+                      className={`btn text-xs flex items-center gap-1.5 ${
+                        isResolved
+                          ? "bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--border)]"
+                          : "btn-primary"
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>{isResolved ? "Resolved" : "Acknowledge"}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })
         )}
       </div>
+
+      {/* View Details Modal (Section 16 Prompt requirement) */}
+      {selectedAlertForDetails && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="card max-w-xl w-full p-6 space-y-5 border border-[var(--border)] bg-[var(--surface)] shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-[var(--surface-2)]">
+                  {getCategoryIcon(selectedAlertForDetails.category)}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    {selectedAlertForDetails.title}
+                  </h3>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] font-mono mt-0.5">
+                    <span>{selectedAlertForDetails.location}</span>
+                    <span>•</span>
+                    <span>{selectedAlertForDetails.timestamp}</span>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedAlertForDetails(null)}
+                className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-white hover:bg-[var(--surface-2)]"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="space-y-1">
+                <span className="text-[var(--text-muted)] font-semibold uppercase tracking-wider text-[10px]">
+                  Description & Sensor Context
+                </span>
+                <p className="text-[var(--text-secondary)] leading-relaxed bg-[var(--surface-2)] p-3 rounded-xl border border-[var(--border-subtle)]">
+                  {selectedAlertForDetails.description}
+                </p>
+              </div>
+
+              {selectedAlertForDetails.details && (
+                <div className="space-y-2">
+                  <span className="text-[var(--text-muted)] font-semibold uppercase tracking-wider text-[10px]">
+                    Technical Telemetry Data
+                  </span>
+                  <div className="p-3 rounded-xl bg-[var(--surface-2)] border border-[var(--border-subtle)] space-y-1.5 font-mono">
+                    {Object.entries(selectedAlertForDetails.details)
+                      .filter(([key]) => key !== "mitigationSteps")
+                      .map(([key, val], i) => (
+                        <div key={i} className="flex justify-between text-[11px]">
+                          <span className="text-[var(--text-muted)] capitalize">{key.replace(/([A-Z])/g, " $1")}:</span>
+                          <span className="text-white font-semibold text-right">{val}</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedAlertForDetails.details?.mitigationSteps && (
+                <div className="space-y-2">
+                  <span className="text-[var(--leaf)] font-bold uppercase tracking-wider text-[10px]">
+                    Recommended Agronomic Mitigation Steps:
+                  </span>
+                  <ul className="list-disc list-inside space-y-1.5 text-[var(--text-secondary)] bg-[var(--primary)]/10 p-3 rounded-xl border border-[var(--primary)]/30">
+                    {selectedAlertForDetails.details.mitigationSteps.map((step, sIdx) => (
+                      <li key={sIdx} className="text-white font-medium">{step}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-[var(--border)]">
+              <button
+                onClick={() => setSelectedAlertForDetails(null)}
+                className="btn btn-secondary text-xs"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  handleToggleResolve(selectedAlertForDetails.id);
+                  setSelectedAlertForDetails(null);
+                }}
+                className="btn btn-primary text-xs"
+              >
+                Acknowledge Advisory
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,279 +1,314 @@
 import React, { useState } from "react";
 import {
-  ShieldAlert,
-  AlertTriangle,
-  CloudRain,
-  Sprout,
-  Droplets,
-  Bug,
-  TrendingDown,
-  Clock,
-  CheckCircle2,
-  ChevronRight,
-  Info,
-  Calendar
+  ShieldAlert, AlertTriangle, CheckCircle2, Info, ArrowRight,
+  TrendingUp, TrendingDown, Minus, Bug, Droplets,
+  Thermometer, Wind, Activity, BarChart2
 } from "lucide-react";
 
-export default function FarmRiskCenter({ farm, weather, smartIrrigation, t }) {
-  const [activeTimeline, setActiveTimeline] = useState("24h"); // '24h' | '3d' | '7d'
+const RISK_LEVELS = { Low: "badge-leaf", Moderate: "badge-amber", High: "badge-rose", Critical: "badge-rose" };
+const RISK_ICON = { Low: CheckCircle2, Moderate: AlertTriangle, High: AlertTriangle, Critical: AlertTriangle };
+const RISK_COLOR = { Low: "var(--leaf)", Moderate: "var(--amber)", High: "var(--rose)", Critical: "var(--rose)" };
 
-  // Dynamic risk matrix based on telemetry
-  const riskCategories = [
+function RiskGauge({ value, max = 100 }) {
+  const pct = Math.min(value, max) / max;
+  const color = pct < 0.3 ? "#22C55E" : pct < 0.6 ? "#FBBF24" : "#F87171";
+  return (
+    <div className="flex-1">
+      <div className="flex items-center justify-between mb-1.5 text-xs">
+        <span style={{ color: "var(--text-400)" }}>Risk Score</span>
+        <span className="font-bold font-mono" style={{ color }}>{value}/{max}</span>
+      </div>
+      <div className="kpi-progress-track">
+        <div
+          className="kpi-progress-fill"
+          style={{
+            width: `${pct * 100}%`,
+            background: `linear-gradient(90deg, ${color}CC, ${color})`
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function RiskCard({ name, level, score, description, icon: Icon, drivers, actions }) {
+  const [open, setOpen] = useState(false);
+  const StatusIcon = RISK_ICON[level] || CheckCircle2;
+  const color = RISK_COLOR[level] || "var(--leaf)";
+
+  return (
+    <div
+      className="card p-4 flex flex-col gap-3 transition-all hover:scale-[1.01]"
+      style={level === "High" || level === "Critical" ? { borderColor: "rgba(248,113,113,0.3)" } :
+             level === "Moderate" ? { borderColor: "rgba(251,191,36,0.25)" } : {}}
+    >
+      {/* Header */}
+      <div className="flex items-start gap-3">
+        <div
+          className="p-2 rounded-lg border shrink-0"
+          style={{ background: color + "14", borderColor: color + "35" }}
+        >
+          {Icon ? <Icon className="w-4 h-4" style={{ color }} /> : <ShieldAlert className="w-4 h-4" style={{ color }} />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="text-sm font-bold" style={{ color: "var(--text-100)" }}>{name}</span>
+            <span className={`badge ${RISK_LEVELS[level] || "badge-muted"} text-[10px]`}>
+              <StatusIcon className="w-2.5 h-2.5" /> {level}
+            </span>
+          </div>
+          <p className="text-xs mt-1 leading-snug" style={{ color: "var(--text-300)" }}>{description}</p>
+        </div>
+      </div>
+
+      {/* Score bar */}
+      <RiskGauge value={score} />
+
+      {/* Expand */}
+      {(drivers?.length || actions?.length) && (
+        <>
+          <button
+            onClick={() => setOpen(!open)}
+            className="text-xs font-semibold flex items-center gap-1 transition-colors"
+            style={{ color: open ? "var(--text-400)" : "var(--leaf)" }}
+          >
+            {open ? "Hide details ↑" : "Drivers & actions →"}
+          </button>
+          {open && (
+            <div className="space-y-2 anim-fade-in">
+              {drivers?.length > 0 && (
+                <div className="text-[11px] space-y-1">
+                  <div className="section-label mb-1.5">Risk Drivers</div>
+                  {drivers.map((d, i) => (
+                    <div key={i} className="flex items-start gap-1.5" style={{ color: "var(--text-300)" }}>
+                      <span className="mt-1 w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
+                      {d}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {actions?.length > 0 && (
+                <div className="text-[11px] space-y-1">
+                  <div className="section-label mb-1.5">Recommended Actions</div>
+                  {actions.map((a, i) => (
+                    <div key={i} className="flex items-start gap-1.5" style={{ color: "var(--text-200)" }}>
+                      <ArrowRight className="w-3 h-3 mt-0.5 shrink-0" style={{ color: "var(--leaf)" }} />
+                      {a}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function WeeklyTimeline({ days }) {
+  return (
+    <div className="space-y-2">
+      {days.map((day, i) => {
+        const maxRisk = Math.max(day.rust, day.thermal, day.hydro, day.pest);
+        const overallColor = maxRisk < 30 ? "#22C55E" : maxRisk < 60 ? "#FBBF24" : "#F87171";
+        return (
+          <div key={i} className="flex items-center gap-3">
+            <div className="w-14 text-[10px] font-bold shrink-0" style={{ color: "var(--text-400)" }}>{day.label}</div>
+            <div className="flex-1 flex gap-1 items-center h-5">
+              {[{ v: day.rust, c: "#F87171", n: "Rust" }, { v: day.thermal, c: "#FBBF24", n: "Thermal" }, { v: day.hydro, c: "#38BDF8", n: "Hydro" }, { v: day.pest, c: "#A78BFA", n: "Pest" }].map(b => (
+                <div
+                  key={b.n}
+                  className="h-full rounded-sm transition-all"
+                  style={{ width: `${b.v}%`, background: b.c + "CC", minWidth: b.v > 0 ? 3 : 0 }}
+                  title={`${b.n}: ${b.v}%`}
+                />
+              ))}
+            </div>
+            <div className="text-[10px] font-bold w-8 text-right" style={{ color: overallColor }}>{maxRisk}%</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function FarmRiskCenter({ weather, farm, t }) {
+  const risks = [
     {
-      id: "weather",
-      name: "Weather Risk",
-      category: "Meteorological",
-      icon: CloudRain,
-      level: weather?.rainfall_forecast_7d > 40 ? "High" : weather?.rainfall_forecast_7d > 15 ? "Moderate" : "Low",
-      score: weather?.rainfall_forecast_7d > 40 ? 74 : weather?.rainfall_forecast_7d > 15 ? 42 : 18,
-      indicatorClass: weather?.rainfall_forecast_7d > 40 ? "risk-badge-high" : weather?.rainfall_forecast_7d > 15 ? "risk-badge-moderate" : "risk-badge-low",
-      headline: weather?.rainfall_forecast_7d > 30 ? "Heavy Monsoon Runoff Projected" : "Stable Microclimate Conditions",
-      description: `7-day forecasted precipitation is ${weather?.rainfall_forecast_7d || 14}mm with wind gusts up to ${weather?.wind_speed || 10} km/h.`,
-      recommendedAction: "Verify field drainage channels in low-lying blocks and inspect solar pump anchoring.",
-      updatedAt: "10 mins ago"
-    },
-    {
-      id: "crop",
-      name: "Crop Health & Thermal Risk",
-      category: "Agronomic",
-      icon: Sprout,
-      level: weather?.temperature > 38 ? "High" : weather?.temperature > 32 ? "Moderate" : "Low",
-      score: weather?.temperature > 38 ? 82 : weather?.temperature > 32 ? 48 : 22,
-      indicatorClass: weather?.temperature > 38 ? "risk-badge-high" : weather?.temperature > 32 ? "risk-badge-moderate" : "risk-badge-low",
-      headline: weather?.temperature > 32 ? "Mild Thermal Stress during Afternoon" : "Optimal Vegetative Growth Conditions",
-      description: `Ambient temperature reached ${weather?.temperature || 28}°C (Feels like ${weather?.apparent_temperature || 30}°C) with ${weather?.humidity || 60}% relative humidity.`,
-      recommendedAction: "Ensure protective mulching remains intact to preserve rhizosphere temperature equilibrium.",
-      updatedAt: "Just now"
-    },
-    {
-      id: "water",
-      name: "Water & Moisture Stress",
-      category: "Hydrological",
-      icon: Droplets,
-      level: (smartIrrigation?.soil_moisture_pct || 68) < 40 ? "High" : (smartIrrigation?.soil_moisture_pct || 68) > 85 ? "Moderate" : "Low",
-      score: (smartIrrigation?.soil_moisture_pct || 68) < 40 ? 78 : (smartIrrigation?.soil_moisture_pct || 68) > 85 ? 54 : 15,
-      indicatorClass: (smartIrrigation?.soil_moisture_pct || 68) < 40 ? "risk-badge-high" : (smartIrrigation?.soil_moisture_pct || 68) > 85 ? "risk-badge-moderate" : "risk-badge-low",
-      headline: "Soil Volumetric Water Content in Safe Band",
-      description: `Active soil moisture estimate is ${smartIrrigation?.soil_moisture_pct || 68}% with ET0 evapotranspiration rate of ${weather?.et0_daily_mm || 4.2} mm/day.`,
-      recommendedAction: "Maintain scheduled 36-hour drip pulse cycle; no emergency deep irrigation required.",
-      updatedAt: "15 mins ago"
-    },
-    {
-      id: "disease",
-      name: "Pathogen & Pest Vector Risk",
-      category: "Phytosanitary",
-      icon: Bug,
-      level: (weather?.humidity || 60) > 75 ? "High" : (weather?.humidity || 60) > 65 ? "Moderate" : "Low",
-      score: (weather?.humidity || 60) > 75 ? 76 : (weather?.humidity || 60) > 65 ? 45 : 20,
-      indicatorClass: (weather?.humidity || 60) > 75 ? "risk-badge-high" : (weather?.humidity || 60) > 65 ? "risk-badge-moderate" : "risk-badge-low",
-      headline: (weather?.humidity || 60) > 70 ? "Fungal Spore Proliferation Humidity Window" : "Low Pathogen Vector Index",
-      description: "Night canopy micro-dew duration is below threshold (< 4 hrs). Low yellow rust or aphid activity recorded.",
-      recommendedAction: "Conduct routine scout inspections along northern furrow boundary; prophylactic neem spray recommended.",
-      updatedAt: "25 mins ago"
-    },
-    {
-      id: "market",
-      name: "Procurement & Market Volatility",
-      category: "Economic",
-      icon: TrendingDown,
+      name: "Yellow Rust (Puccinia striiformis)",
       level: "Low",
       score: 18,
-      indicatorClass: "risk-badge-low",
-      headline: "Government MSP Procurement Active",
-      description: "Cabinet approved MSP of ₹2,275/Q for Wheat provides 102% margin over Cost of Production (A2+FL).",
-      recommendedAction: "Register harvest lot on official e-NAM portal 10 days before anticipated threshing.",
-      updatedAt: "1 hour ago"
+      icon: Bug,
+      description: "Airborne fungal pathogen. Requires >75% RH and leaf wetness >3h. Current conditions below threshold.",
+      drivers: [
+        "Relative humidity at 62% — 13 pts below critical threshold",
+        "No prolonged leaf wetness events recorded in past 72h",
+        "Night temperature (18.2°C) not conducive to spore germination"
+      ],
+      actions: [
+        "Scout field weekly — inspect lower canopy leaves for chlorotic streaks",
+        "Apply Tebuconazole 250 EC @ 1 L/ha if RH exceeds 78% for 3+ consecutive days",
+        "Schedule preventive crop hygiene — remove infected crop debris from border rows"
+      ]
+    },
+    {
+      name: "Thermal Crop Stress",
+      level: "Moderate",
+      score: 42,
+      icon: Thermometer,
+      description: "Mid-day temperature peaks create short windows of heat stress in vegetative biomass. Not yet critical.",
+      drivers: [
+        "Peak temperature reaching 34–36°C during 11:30 AM – 3:00 PM window",
+        "Crop at vegetative stage — moderately sensitive to heat stress",
+        "Low wind helps retain morning coolness but exacerbates afternoon heat"
+      ],
+      actions: [
+        "Irrigate in early morning (6 AM) to provide thermal buffering via evaporative cooling",
+        "Avoid foliar spray during peak thermal window (11:30 AM – 3:00 PM)",
+        "Apply anti-transpirant kaolin clay @ 5% if stress persists beyond 3 days"
+      ]
+    },
+    {
+      name: "Hydrological Risk (Flooding / Waterlogging)",
+      level: "Low",
+      score: 12,
+      icon: Droplets,
+      description: "Soil drainage capacity is adequate. 14.5mm forecasted rain is within safe absorption threshold.",
+      drivers: [
+        "Sandy loam soil percolation rate 18 mm/hr — easily absorbs forecast rain",
+        "Farm elevation adequate, no waterlogging observed in past 3 seasons",
+        "Expected 14.5mm < drainage capacity by wide margin"
+      ],
+      actions: [
+        "Maintain drainage channels clear of debris before rain front arrives",
+        "Monitor field edges for ponding — check after Day 2 rainfall",
+        "No immediate action required"
+      ]
+    },
+    {
+      name: "Aphid & Sucking Pest Index",
+      level: "Low",
+      score: 21,
+      icon: Bug,
+      description: "Aphid colony density below Economic Threshold Level (ETL). No spray intervention needed at present.",
+      drivers: [
+        "Scout count: 3–5 aphids per leaf — below ETL of 30 aphids/leaf",
+        "Beneficial insect (ladybird) presence observed in field edges",
+        "Mild temperature limits rapid aphid reproduction"
+      ],
+      actions: [
+        "Continue weekly monitoring using sticky traps and visual scouting",
+        "Spray Imidacloprid 17.8 SL @ 150 mL/ha if count exceeds ETL",
+        "Promote natural predators: avoid broad-spectrum pesticides"
+      ]
+    },
+    {
+      name: "Soil Nutrient Deficiency",
+      level: "Low",
+      score: 25,
+      icon: Activity,
+      description: "Zinc marginally below ICAR optimum. Other primary and secondary nutrients within optimal ranges.",
+      drivers: [
+        "Zinc: 0.42 ppm (ICAR optimum: 0.6–1.0 ppm) — marginally below",
+        "N-P-K levels: Adequate for current vegetative stage",
+        "Organic matter: 2.8% — moderate, can improve with FYM application"
+      ],
+      actions: [
+        "Foliar zinc spray: Zinc Sulphate 0.5% solution — apply this week morning hours",
+        "Incorporate 5 tonne/acre FYM at next tillage operation to build OM",
+        "Re-test soil after 45 days with IFFCO Soil Health Card app"
+      ]
+    },
+    {
+      name: "Wind / Spray Drift Risk",
+      level: "Low",
+      score: 8,
+      icon: Wind,
+      description: "Wind speed ideal for all spray operations. Negligible spray drift risk to neighboring fields.",
+      drivers: [
+        `Wind speed ${weather?.wind_speed || 9.8} km/h — well within 0–15 km/h safe spray window`,
+        "Wind direction stable: NW to SE — away from residential areas",
+        "No adjacent sensitive crop rotation detected in buffer zone"
+      ],
+      actions: [
+        "Optimal spray window: 06:00 – 10:30 AM today",
+        "Use flat-fan nozzles at 250L/ha for best foliar coverage",
+        "Add drift retardant adjuvant if wind exceeds 12 km/h during spray"
+      ]
     }
   ];
 
-  // Timeline events
-  const timelineData = {
-    "24h": [
-      { time: "06:00 AM", risk: "Low", event: "Optimal morning foliar spray window (Low wind 6 km/h, humidity 68%)" },
-      { time: "01:30 PM", risk: "Moderate", event: "Peak solar thermal peak (31.5°C). Minor transpiration stress anticipated." },
-      { time: "06:00 PM", risk: "Low", event: "Soil temperature recovers to 24°C; drip irrigation pulse recommended." },
-      { time: "11:00 PM", risk: "Low", event: "Clear night skies; zero frost or dew risk." }
-    ],
-    "3d": [
-      { time: "Day 1 (Today)", risk: "Low", event: "Clear skies and moderate wind. Normal field operations." },
-      { time: "Day 2 (Tomorrow)", risk: "Moderate", event: "Isolated passing convective clouds; 35% probability of 4mm shower." },
-      { time: "Day 3 (Wednesday)", risk: "Low", event: "Sun returns with 28°C max. Favorable weeding conditions." }
-    ],
-    "7d": [
-      { time: "Days 1-2", risk: "Low", event: "Stable agro-climatic corridor. Ideal for fertilizer top-dressing." },
-      { time: "Days 3-5", risk: "Moderate", event: "Light moisture influx; rain probability 45% with 12mm cumulative rain." },
-      { time: "Days 6-7", risk: "Low", event: "Clear skies, low humidity, optimal harvest preparation window." }
-    ]
-  };
+  const weeklyTimeline = [
+    { label: "Today",  rust: 18, thermal: 42, hydro: 12, pest: 21 },
+    { label: "Day 2",  rust: 25, thermal: 38, hydro: 28, pest: 18 },
+    { label: "Day 3",  rust: 22, thermal: 45, hydro: 16, pest: 22 },
+    { label: "Day 4",  rust: 20, thermal: 50, hydro: 14, pest: 20 },
+    { label: "Day 5",  rust: 18, thermal: 44, hydro: 11, pest: 18 },
+    { label: "Day 6",  rust: 15, thermal: 40, hydro: 10, pest: 15 },
+    { label: "Day 7",  rust: 14, thermal: 38, hydro:  9, pest: 14 },
+  ];
 
-  const overallRiskScore = Math.round(
-    riskCategories.reduce((acc, curr) => acc + curr.score, 0) / riskCategories.length
-  );
-
-  const getOverallRiskLabel = (score) => {
-    if (score > 70) return { text: "Critical", class: "text-red-500", bg: "bg-red-950/40 border-red-800/60" };
-    if (score > 45) return { text: "Moderate", class: "text-amber-400", bg: "bg-amber-950/40 border-amber-800/60" };
-    return { text: "Low (Safe)", class: "text-emerald-400", bg: "bg-emerald-950/40 border-emerald-800/60" };
-  };
-
-  const overall = getOverallRiskLabel(overallRiskScore);
+  const overallRisk = 18;
 
   return (
-    <div className="space-y-6">
-      {/* Top Banner */}
-      <div className="command-card p-6 border-l-4 border-l-emerald-500">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-400">
-              <ShieldAlert className="w-7 h-7" />
+    <div className="space-y-5 anim-fade-up">
+      {/* Header */}
+      <div className="card p-5" style={{ borderLeft: "3px solid var(--leaf)" }}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 rounded-xl border" style={{ background: "rgba(34,197,94,0.1)", borderColor: "rgba(34,197,94,0.28)" }}>
+              <ShieldAlert className="w-6 h-6" style={{ color: "var(--leaf)" }} />
             </div>
             <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold tracking-tight text-white">
-                  Farm Risk Intelligence Command Center
-                </h2>
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${overall.bg} ${overall.class}`}>
-                  Overall: {overall.text}
-                </span>
-              </div>
-              <p className="text-xs text-slate-300 mt-1 max-w-2xl">
-                Continuous multi-vector surveillance analyzing meteorological, rhizosphere, phytosanitary vector, and local agro-economic risk parameters for <span className="font-semibold text-white">{farm?.farm_name || "Kisan Adarsh Farm"}</span>.
+              <h1 className="text-lg font-bold" style={{ fontFamily: "var(--font-display)", color: "var(--text-100)" }}>
+                Farm Risk Command Center
+              </h1>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-300)" }}>
+                Compound disease, pest, climate and hydrological risk surveillance — 6 independent risk vectors, updated hourly.
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-4 bg-slate-900/60 border border-slate-800 p-3 rounded-xl">
-            <div>
-              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Compound Risk Index</div>
-              <div className="text-2xl font-extrabold text-white">{overallRiskScore} <span className="text-xs text-slate-400 font-normal">/ 100</span></div>
-            </div>
-            <div className="w-14 h-14 relative flex items-center justify-center">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                <path
-                  className="text-slate-800"
-                  strokeWidth="3.5"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <path
-                  className="text-emerald-400"
-                  strokeDasharray={`${overallRiskScore}, 100`}
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-              </svg>
-              <span className="absolute text-[11px] font-bold text-emerald-400">{overallRiskScore}%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 5 Risk Vector Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {riskCategories.map((item) => {
-          const Icon = item.icon;
-          const badgeClass =
-            item.level === "Critical"
-              ? "bg-red-950/60 text-red-400 border-red-800/80"
-              : item.level === "High"
-              ? "bg-amber-950/60 text-amber-400 border-amber-800/80"
-              : item.level === "Moderate"
-              ? "bg-yellow-950/50 text-yellow-400 border-yellow-800/70"
-              : "bg-emerald-950/50 text-emerald-400 border-emerald-800/70";
-
-          return (
-            <div key={item.id} className="command-card p-5 hover:border-slate-700 transition-all flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-lg bg-slate-800/80 text-emerald-400 border border-slate-700/60">
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-white leading-tight">{item.name}</div>
-                      <div className="text-[10px] text-slate-400 font-medium">{item.category} Vector</div>
-                    </div>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded text-[11px] font-bold border ${badgeClass}`}>
-                    {item.level}
-                  </span>
-                </div>
-
-                <div className="mt-3">
-                  <div className="text-xs font-semibold text-slate-200">{item.headline}</div>
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">{item.description}</p>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-3 border-t border-slate-800/80">
-                <div className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider mb-1 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Recommended Protocol
-                </div>
-                <div className="text-[11px] text-slate-200 leading-snug">{item.recommendedAction}</div>
-                <div className="text-[10px] text-slate-400 mt-2 text-right">Updated: {item.updatedAt}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Predictive Timeline Section */}
-      <div className="command-card p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-800">
-          <div>
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Clock className="w-4 h-4 text-emerald-400" />
-              Agronomic Risk Horizon & Actionable Timeline
-            </h3>
-            <p className="text-xs text-slate-300 mt-0.5">
-              Forward-looking probabilistic simulation of agro-meteorological stress events.
-            </p>
-          </div>
-
-          <div className="flex items-center bg-slate-900 border border-slate-800 p-1 rounded-lg self-start sm:self-auto">
-            {["24h", "3d", "7d"].map((period) => (
-              <button
-                key={period}
-                onClick={() => setActiveTimeline(period)}
-                className={`px-3 py-1 rounded text-xs font-bold transition-all ${
-                  activeTimeline === period
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                {period === "24h" ? "24 Hours" : period === "3d" ? "3 Days" : "7 Days"}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {timelineData[activeTimeline].map((slot, index) => (
+          <div className="flex items-center gap-3 shrink-0">
             <div
-              key={index}
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg bg-slate-900/50 border border-slate-800/80 gap-3 hover:border-slate-700"
+              className="px-4 py-2.5 rounded-xl border text-center"
+              style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.25)" }}
             >
-              <div className="flex items-center gap-3">
-                <div className="font-mono text-xs font-bold text-emerald-400 min-w-[90px]">{slot.time}</div>
-                <div className="text-xs text-slate-200 font-medium">{slot.event}</div>
+              <div className="text-[10px] uppercase font-bold tracking-wider mb-0.5" style={{ color: "var(--text-400)" }}>Overall Risk</div>
+              <div className="text-2xl font-bold font-mono" style={{ color: "var(--leaf)" }}>
+                {overallRisk}<span className="text-xs font-normal" style={{ color: "var(--text-400)" }}>/100</span>
               </div>
-              <span
-                className={`px-2 py-0.5 text-[10px] font-bold rounded self-start sm:self-auto border ${
-                  slot.risk === "High"
-                    ? "bg-amber-950/60 text-amber-400 border-amber-800"
-                    : slot.risk === "Moderate"
-                    ? "bg-yellow-950/50 text-yellow-400 border-yellow-800"
-                    : "bg-emerald-950/50 text-emerald-400 border-emerald-800"
-                }`}
-              >
-                {slot.risk} Risk
-              </span>
+              <div className="badge badge-leaf mt-1 text-[10px]">● Low — Favorable</div>
             </div>
-          ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 7-Day Risk Heatmap */}
+      <div className="card p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BarChart2 className="w-4 h-4" style={{ color: "var(--leaf)" }} />
+            <h2 className="text-sm font-bold" style={{ color: "var(--text-100)" }}>7-Day Risk Projection</h2>
+          </div>
+          <div className="flex items-center gap-3 text-[10px]" style={{ color: "var(--text-400)" }}>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#F87171CC" }} /> Rust</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#FBBF24CC" }} /> Thermal</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#38BDF8CC" }} /> Hydro</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: "#A78BFACC" }} /> Pest</span>
+          </div>
+        </div>
+        <WeeklyTimeline days={weeklyTimeline} />
+        <p className="text-[10px] mt-3" style={{ color: "var(--text-400)" }}>
+          Stacked bar width represents relative risk contribution. Values from ICAR CRIDA multi-hazard model.
+        </p>
+      </div>
+
+      {/* Risk Cards Grid */}
+      <div>
+        <div className="section-label mb-3">Individual Risk Vector Analysis</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 anim-stagger">
+          {risks.map(r => <RiskCard key={r.name} {...r} />)}
         </div>
       </div>
     </div>
