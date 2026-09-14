@@ -3,7 +3,8 @@ import {
   Thermometer, CloudRain, Droplets, Sprout, ShieldCheck,
   Sparkles, MapPin, Layers, ChevronRight, Cpu, Info,
   Wind, TrendingUp, TrendingDown, ArrowRight, Activity,
-  BarChart2, CheckCircle2, AlertTriangle, Sun
+  BarChart2, CheckCircle2, AlertTriangle, Sun, Calendar,
+  Sliders, Navigation as CompassIcon, Zap
 } from "lucide-react";
 
 /* ── Animated number counter hook ── */
@@ -50,13 +51,13 @@ function KPICard({ title, value, unit, trend, trendUp, icon: Icon, explanation, 
   const isNegative = trendUp === false;
 
   return (
-    <div className="card p-4 flex flex-col gap-3 hover:scale-[1.01] transition-transform cursor-default group">
+    <div className="card p-4 flex flex-col gap-3 hover:scale-[1.01] hover:border-[var(--leaf)] transition-all cursor-default group shadow-md">
       {/* Header Row */}
       <div className="flex items-start justify-between">
         <div>
-          <div className="kpi-label mb-2">{title}</div>
+          <div className="kpi-label mb-2 flex items-center gap-1.5">{title}</div>
           <div className="flex items-baseline gap-1.5">
-            <span className="kpi-value" style={{ fontSize: "1.9rem", color: color || "var(--text-100)" }}>
+            <span className="kpi-value font-bold" style={{ fontSize: "1.9rem", color: color || "var(--text-100)" }}>
               {Number.isInteger(parseFloat(value)) ? Math.round(animated) : animated}
             </span>
             <span className="text-xs font-semibold" style={{ color: "var(--text-400)" }}>{unit}</span>
@@ -84,7 +85,7 @@ function KPICard({ title, value, unit, trend, trendUp, icon: Icon, explanation, 
         <div className="flex items-center gap-1.5">
           {isPositive && <TrendingUp className="w-3 h-3 text-[var(--leaf)]" />}
           {isNegative && <TrendingDown className="w-3 h-3 text-[var(--rose)]" />}
-          <span className={`kpi-trend ${isPositive ? "text-[var(--leaf)]" : isNegative ? "text-[var(--rose)]" : "text-[var(--text-400)]"}`}>
+          <span className={`kpi-trend ${isPositive ? "text-[var(--leaf)] font-bold" : isNegative ? "text-[var(--rose)] font-bold" : "text-[var(--text-400)]"}`}>
             {trend}
           </span>
         </div>
@@ -124,7 +125,7 @@ function StatRow({ label, value, valueColor }) {
 /* ── Module Tile ── */
 function ModuleTile({ title, icon: Icon, iconColor, stats, onNavigate, target }) {
   return (
-    <div className="card p-5 flex flex-col justify-between hover:scale-[1.01] transition-transform">
+    <div className="card p-5 flex flex-col justify-between hover:scale-[1.01] hover:border-[var(--leaf)] transition-all shadow-md">
       <div>
         <div className="flex items-center justify-between mb-3.5">
           <div className="flex items-center gap-2.5">
@@ -150,73 +151,75 @@ function ModuleTile({ title, icon: Icon, iconColor, stats, onNavigate, target })
 }
 
 /* ── AI Recommendation Banner ── */
-function AIBanner({ recommendation, smartIrrigation, onViewExplanation, onNavigate }) {
+function AIBanner({ recommendation, smartIrrigation, onNavigate }) {
   const [expanded, setExpanded] = useState(false);
+
+  const irrData = smartIrrigation?.irrigation_data || smartIrrigation || {};
+  const isWait = irrData.status === "Wait" || !irrData.status;
 
   return (
     <div
-      className="card p-5 relative overflow-hidden"
+      className="card p-5 sm:p-6 relative overflow-hidden border-l-4 shadow-xl"
       style={{
+        borderLeftColor: "var(--harvest)",
         background: "linear-gradient(135deg, #0B2218 0%, #112B1C 100%)",
-        borderColor: "rgba(34,197,94,0.30)",
-        borderLeft: "3px solid var(--leaf)"
+        borderColor: "rgba(34,197,94,0.22)"
       }}
     >
-      {/* Glow orb */}
-      <div
-        className="absolute -top-8 -right-8 w-32 h-32 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(34,197,94,0.12), transparent 70%)" }}
-      />
-
-      <div className="relative flex flex-col md:flex-row md:items-start justify-between gap-4">
-        <div className="flex items-start gap-3.5 flex-1 min-w-0">
-          {/* Animated pulse icon */}
+      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div className="flex items-start gap-3.5 min-w-0">
           <div
-            className="p-2.5 rounded-xl shrink-0 mt-0.5 border"
+            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border mt-0.5"
             style={{
-              background: "rgba(34,197,94,0.12)",
-              borderColor: "rgba(34,197,94,0.30)",
-              boxShadow: "0 0 0 0 rgba(34,197,94,0.4)",
-              animation: "pulse-glow 2.5s infinite"
+              background: "rgba(251,191,36,0.15)",
+              borderColor: "rgba(251,191,36,0.35)",
+              color: "#FBBF24"
             }}
           >
-            <Sparkles className="w-5 h-5" style={{ color: "var(--leaf)" }} />
+            <Sparkles className="w-5 h-5" />
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2 mb-1.5">
-              <span className="badge badge-leaf text-[10px]">
-                ● AI Primary Recommendation
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className="badge badge-emerald text-[11px] font-bold">
+                AI Confidence: 87%
               </span>
-              <span className="badge badge-muted text-[10px]">
-                <CheckCircle2 className="w-2.5 h-2.5 text-[var(--leaf)]" />
-                87% Confidence
+              <span className="badge badge-sky text-[11px] font-semibold">
+                NWP + Soil Telemetry
+              </span>
+              <span className="text-xs font-bold" style={{ color: "var(--text-300)" }}>
+                PRIMARY FARM DIRECTIVE
               </span>
             </div>
 
-            <h2 className="text-base font-bold leading-tight mb-1" style={{ color: "var(--text-100)", fontFamily: "var(--font-display)" }}>
-              Delay irrigation by 24 hours — rain forecast approaching.
+            <h2 className="text-base sm:text-lg font-bold text-white mb-1.5 leading-snug">
+              {isWait
+                ? "Delay Scheduled Drip Irrigation by 24–36 Hours"
+                : "Initiate Scheduled Micro-Emitter Cycle"}
             </h2>
 
-            <p className="text-xs leading-relaxed mb-2" style={{ color: "var(--text-300)" }}>
-              Soil moisture at {smartIrrigation?.soil_moisture_pct || 68}% VWC with 14.5mm rainfall window in 36h.
-              Irrigating now risks root hypoxia and nitrogen leaching below root zone.
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-300)" }}>
+              <strong className="text-white">Reason:</strong> 14.5 mm convective precipitation inbound over the next 48h while root-zone moisture is already at an optimal 68% VWC. Deferring the pumping cycle conserves ₹850 in energy and avoids nitrogen leaching.
             </p>
 
             {expanded && (
               <div
-                className="text-xs rounded-lg p-3 mt-2 space-y-1.5 anim-fade-in"
-                style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--border-2)", color: "var(--text-300)" }}
+                className="mt-3 p-3.5 rounded-xl border text-xs space-y-2 anim-fade-up"
+                style={{ background: "rgba(0,0,0,0.35)", borderColor: "var(--border-2)" }}
               >
-                <div className="font-bold text-[10px] uppercase tracking-wider mb-2" style={{ color: "var(--leaf)" }}>Model Input Attribution:</div>
+                <div className="font-bold text-white flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5" style={{ color: "var(--leaf)" }} />
+                  Decision-Support Contribution Breakdown:
+                </div>
                 {[
-                  ["Soil Moisture (68% VWC)", "Sufficient — 55–75% safe band", "#22C55E"],
-                  ["Rain Forecast (+14.5mm in 36h)", "Replenishment incoming — defer cycle", "#38BDF8"],
-                  ["ET₀ Rate (4.2 mm/day)", "Moderate atmospheric draw — low urgency", "#FBBF24"],
-                ].map(([k, v, c]) => (
-                  <div key={k} className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ background: c }} />
-                    <div><span className="font-semibold" style={{ color: "var(--text-200)" }}>{k}:</span> {v}</div>
+                  { factor: "Root Moisture Storage", val: "68% VWC — Within 55–75% safe buffer zone", status: "Optimal" },
+                  { factor: "Precipitation Forecast", val: "14.5mm rain expected in Day 2 window (35% prob)", status: "Delay" },
+                  { factor: "Evaporative Loss (ETc)", val: "1.36 mm/day (Wheat vegetative stage Kc = 0.85)", status: "Low" },
+                  { factor: "Diesel / Power Savings", val: "320 m³ water conserved · ₹850 cost avoided", status: "+Savings" },
+                ].map((item, i) => (
+                  <div key={i} className="flex justify-between items-center py-1 border-b last:border-0" style={{ borderColor: "var(--border-3)" }}>
+                    <span style={{ color: "var(--text-300)" }}>{item.factor}:</span>
+                    <span className="font-mono font-bold text-white text-right">{item.val}</span>
                   </div>
                 ))}
                 <div className="text-[10px] mt-1 pt-2 border-t" style={{ borderColor: "var(--border-3)", color: "var(--text-400)" }}>
@@ -227,15 +230,22 @@ function AIBanner({ recommendation, smartIrrigation, onViewExplanation, onNaviga
 
             <button
               onClick={() => setExpanded(!expanded)}
-              className="text-xs font-semibold mt-1 flex items-center gap-1 transition-colors"
+              className="text-xs font-semibold mt-2 flex items-center gap-1 transition-colors cursor-pointer"
               style={{ color: expanded ? "var(--text-400)" : "var(--leaf)" }}
             >
-              {expanded ? "Hide explanation ↑" : "View full explanation →"}
+              {expanded ? "Hide explanation ↑" : "View full scientific explanation →"}
             </button>
           </div>
         </div>
 
         <div className="flex flex-row md:flex-col gap-2 shrink-0 self-start">
+          <button
+            onClick={() => onNavigate("smartIrrigation")}
+            className="btn btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5 shadow"
+          >
+            <Droplets className="w-3.5 h-3.5" />
+            <span>Irrigation Details</span>
+          </button>
           <button
             onClick={() => onNavigate("farmIntelligence")}
             className="btn btn-secondary text-xs py-2 px-3"
@@ -247,7 +257,7 @@ function AIBanner({ recommendation, smartIrrigation, onViewExplanation, onNaviga
             className="btn btn-ghost text-xs py-2 px-3"
             style={{ color: "var(--text-300)" }}
           >
-            Run AI Analysis
+            Run AI Crop Advisor
           </button>
         </div>
       </div>
@@ -302,13 +312,13 @@ export default function Dashboard({
       ringColor: "#38BDF8"
     },
     {
-      title: "Soil Moisture",
+      title: "Soil Moisture (VWC)",
       value: smartIrrigation?.soil_moisture_pct || 68,
       unit: "% VWC",
       trend: "Optimal rhizosphere",
       trendUp: null,
       icon: Layers,
-      explanation: "Root zone VWC in 55–75% safe band. No stress. Defer irrigation.",
+      explanation: "Root zone VWC in 55–75% safe band. No stress. Defer scheduled irrigation.",
       color: "#22C55E",
       bg: "bg-emerald-950/40 border-emerald-800/40",
       ringValue: smartIrrigation?.soil_moisture_pct || 68,
@@ -346,6 +356,18 @@ export default function Dashboard({
   ];
 
   const moduleTiles = [
+    {
+      title: "Smart Irrigation Command",
+      icon: Droplets,
+      iconColor: "#38BDF8",
+      target: "smartIrrigation",
+      stats: [
+        { label: "Water Directive", value: "HOLD (Rain Inbound)", valueColor: "var(--sky)" },
+        { label: "Root-Zone VWC", value: "68% (Optimal)", valueColor: "var(--leaf)" },
+        { label: "ETc Demand", value: `${smartIrrigation?.irrigation_data?.crop_water_requirement_mm_day || 1.36} mm/day` },
+        { label: "Pumping Savings", value: "₹850 / 320 m³", valueColor: "var(--leaf)" },
+      ]
+    },
     {
       title: "Weather Intelligence",
       icon: CloudRain,
@@ -385,13 +407,12 @@ export default function Dashboard({
   ];
 
   return (
-    <div className="space-y-5 anim-fade-up">
+    <div className="space-y-6 anim-fade-up">
       {/* ── HERO STATUS BANNER ── */}
       <div
-        className="card p-5 relative overflow-hidden"
+        className="card p-5 sm:p-6 relative overflow-hidden shadow-xl"
         style={{ background: "linear-gradient(135deg, #0A1E14 0%, #102518 60%, #0D1F15 100%)", borderColor: "rgba(34,197,94,0.28)" }}
       >
-        {/* Background subtle pattern */}
         <div className="absolute inset-0 opacity-10 pointer-events-none"
              style={{ backgroundImage: "radial-gradient(circle at 80% 50%, #22C55E 0%, transparent 40%)" }} />
 
@@ -401,11 +422,11 @@ export default function Dashboard({
             <div className="flex items-center gap-2 mb-2">
               <div className="live-dot" />
               <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--leaf)", letterSpacing: "0.12em" }}>
-                Live Telemetry Active
+                Live Precision Telemetry Active
               </span>
             </div>
             <h1
-              className="text-2xl font-bold tracking-tight mb-1.5 truncate"
+              className="text-2xl sm:text-3xl font-bold tracking-tight mb-1.5 truncate"
               style={{ fontFamily: "var(--font-display)", color: "var(--text-100)" }}
             >
               {farm?.farm_name || "Kisan Adarsh Farm"}
@@ -426,8 +447,8 @@ export default function Dashboard({
             </div>
           </div>
 
-          {/* Right: Health Score + CTA */}
-          <div className="flex items-center gap-3 shrink-0">
+          {/* Right: Health Score + Quick Subsystem Navigation */}
+          <div className="flex items-center gap-4 shrink-0">
             {/* Ring Health Gauge */}
             <div className="flex flex-col items-center gap-0.5">
               <div className="relative">
@@ -439,15 +460,24 @@ export default function Dashboard({
               <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: "var(--text-400)" }}>Health</span>
             </div>
 
-            <button
-              onClick={onRunAiAnalysis}
-              disabled={isAnalyzing}
-              className="btn btn-primary px-4 py-2.5 text-sm"
-              style={{ minWidth: 145 }}
-            >
-              <Cpu className={`w-4 h-4 ${isAnalyzing ? "animate-spin" : ""}`} />
-              {isAnalyzing ? "Analyzing…" : "Run AI Analysis"}
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={onRunAiAnalysis}
+                disabled={isAnalyzing}
+                className="btn btn-primary px-4 py-2 text-xs flex items-center justify-center gap-2 shadow-md"
+              >
+                <Cpu className={`w-4 h-4 ${isAnalyzing ? "animate-spin" : ""}`} />
+                {isAnalyzing ? "Computing..." : "Run AI Analysis"}
+              </button>
+
+              <button
+                onClick={() => onNavigate("smartIrrigation")}
+                className="btn btn-secondary px-4 py-2 text-xs flex items-center justify-center gap-1.5"
+              >
+                <Droplets className="w-3.5 h-3.5 text-[var(--sky)]" />
+                <span>Smart Irrigation</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -467,7 +497,7 @@ export default function Dashboard({
             Real-Time Environmental & Agronomic Telemetry
           </div>
           <div className="flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: "var(--leaf)" }}>
-            <div className="live-dot" style={{ width: 5, height: 5 }} /> Live
+            <div className="live-dot" style={{ width: 5, height: 5 }} /> Live Sensor & NWP Feed
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 anim-stagger">
@@ -475,10 +505,41 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* ── 3 MODULE QUICK-ACCESS TILES ── */}
+      {/* ── SOIL MOISTURE HYDROLOGY STRIP PREVIEW ── */}
+      <div className="card p-5 border-l-4 border-l-[var(--sky)] flex flex-col md:flex-row items-center justify-between gap-4 shadow-lg bg-gradient-to-r from-[var(--surface)] to-[var(--surface-2)]">
+        <div className="flex items-center gap-3.5">
+          <div className="p-3 rounded-xl bg-[var(--sky)]/15 text-[var(--sky)] border border-[var(--sky)]/30">
+            <Droplets className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-white">Root-Zone Soil Moisture Storage: 68% VWC</h3>
+              <span className="badge badge-emerald text-[10px]">Optimal Comfort Band</span>
+            </div>
+            <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+              Refill threshold is 55%. Current volumetric storage provides continuous root transpiration for another 72 hours.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="w-36 h-2.5 rounded-full bg-[var(--surface)] border border-[var(--border)] overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-[var(--primary)] to-[var(--sky)] rounded-full" style={{ width: "68%" }} />
+          </div>
+          <button
+            onClick={() => onNavigate("smartIrrigation")}
+            className="btn btn-primary text-xs py-1.5 px-3 flex items-center gap-1 shadow"
+          >
+            <span>Open Irrigation</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── 4 MODULE QUICK-ACCESS TILES ── */}
       <div>
-        <div className="section-label mb-3">Module Quick Access</div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 anim-stagger">
+        <div className="section-label mb-3">Subsystem Quick Access</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 anim-stagger">
           {moduleTiles.map(tile => (
             <ModuleTile key={tile.title} {...tile} onNavigate={onNavigate} />
           ))}

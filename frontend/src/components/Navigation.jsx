@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   LayoutDashboard, Sprout, CloudSun, BrainCircuit, ShieldAlert,
   Map, MessageSquareText, BarChart3, Bell, Settings, Building2,
-  ChevronLeft, ChevronRight, Droplets, Leaf, Zap
+  ChevronLeft, ChevronRight, Droplets, Leaf, Zap, CalendarDays
 } from "lucide-react";
 
 export const NAV_ITEMS = [
@@ -17,7 +17,8 @@ export const NAV_ITEMS = [
     items: [
       { id: "farmIntelligence", label: "Farm Intelligence", icon: Sprout },
       { id: "weather",          label: "Weather",           icon: CloudSun },
-      { id: "smartIrrigation",  label: "Irrigation",        icon: Droplets },
+      { id: "smartIrrigation",  label: "Smart Irrigation",  icon: Droplets, badge: "Live" },
+      { id: "planner",          label: "Work Planner",      icon: CalendarDays },
     ]
   },
   {

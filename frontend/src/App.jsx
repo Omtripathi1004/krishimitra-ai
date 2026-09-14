@@ -299,6 +299,9 @@ export default function App() {
     weather: "Weather Intelligence & NWP Forecast",
     cropIntelligence: "Crop Intelligence & ML Recommendations",
     diseaseRisk: "Farm Risk Command Center",
+    smartIrrigation: "Smart Irrigation & Soil Hydrology",
+    irrigation: "Smart Irrigation & Soil Hydrology",
+    planner: "Farm Milestone & Work Planner",
     maps: "Geospatial Agricultural Map",
     assistant: "Krishi Copilot AI Assistant",
     analytics: "Farm Performance Analytics",
@@ -318,6 +321,8 @@ export default function App() {
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
         alertCount={3}
+        farm={farm}
+        weather={weather}
         t={t}
       />
 
@@ -390,7 +395,7 @@ export default function App() {
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400" />
             </button>
 
-            {/* Profile Quick Button */}
+            {/* Profile Avatar */}
             <button
               onClick={() => setActiveTab("settings")}
               className="p-1.5 rounded-lg bg-emerald-900/60 border border-emerald-700/70 text-emerald-300 hover:bg-emerald-800 transition-colors"
@@ -400,6 +405,59 @@ export default function App() {
             </button>
           </div>
         </header>
+
+        {/* ── LIVE TELEMETRY TICKER BAR ── */}
+        <div className="bg-[var(--surface-2)]/90 border-b border-[var(--border)] px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3 overflow-x-auto py-0.5 scrollbar-none">
+            <span className="flex items-center gap-1.5 font-mono text-[var(--leaf)] font-bold">
+              <span className="w-2 h-2 rounded-full bg-[var(--leaf)] animate-ping inline-block" />
+              <span>LIVE TELEMETRY</span>
+            </span>
+            <span className="text-[var(--border)]">|</span>
+            <span className="text-[var(--text-secondary)]">
+              Territory: <strong className="text-white">{farm?.location_name || "Ludhiana, Punjab"}</strong>
+            </span>
+            <span className="text-[var(--border)]">|</span>
+            <span className="text-[var(--text-secondary)]">
+              Temp: <strong className="text-[var(--harvest)]">{weather?.temperature || 28}°C</strong>
+            </span>
+            <span className="text-[var(--border)]">|</span>
+            <span className="text-[var(--text-secondary)]">
+              RH: <strong className="text-[var(--sky)]">{weather?.humidity || 62}%</strong>
+            </span>
+            <span className="text-[var(--border)]">|</span>
+            <span className="text-[var(--text-secondary)]">
+              Soil Moisture: <strong className="text-[var(--leaf)]">68% VWC</strong>
+            </span>
+            <span className="text-[var(--border)]">|</span>
+            <span className="text-[var(--text-secondary)]">
+              Irrigation Directive: <strong className="text-[var(--sky)]">{smartIrrigation?.irrigation_data?.status || "Hold (Rain 24h)"}</strong>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setActiveTab("smartIrrigation")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                activeTab === "smartIrrigation" || activeTab === "irrigation"
+                  ? "bg-[var(--primary)] text-white shadow"
+                  : "bg-[var(--surface)] text-[var(--sky)] hover:text-white border border-[var(--sky)]/30"
+              }`}
+            >
+              <span>💧 Smart Irrigation</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("maps")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                activeTab === "maps"
+                  ? "bg-[var(--primary)] text-white shadow"
+                  : "bg-[var(--surface)] text-[var(--leaf)] hover:text-white border border-[var(--primary)]/30"
+              }`}
+            >
+              <span>🛰️ Satellite Map</span>
+            </button>
+          </div>
+        </div>
 
         {/* ── PAGE CONTENT CONTAINER ── */}
         <main className="command-content">
@@ -421,6 +479,25 @@ export default function App() {
             <MyFarm
               farm={farm}
               onUpdateFarm={handleUpdateFarm}
+              t={t}
+            />
+          )}
+
+          {(activeTab === "smartIrrigation" || activeTab === "irrigation") && (
+            <SmartIrrigation
+              smartIrrigation={smartIrrigation}
+              farm={farm}
+              weather={weather}
+              t={t}
+            />
+          )}
+
+          {(activeTab === "planner" || activeTab === "farmPlanner") && (
+            <FarmPlanner
+              tasks={tasks}
+              onToggleTask={handleToggleTask}
+              onCreateTask={handleCreateTask}
+              onDeleteTask={handleDeleteTask}
               t={t}
             />
           )}
