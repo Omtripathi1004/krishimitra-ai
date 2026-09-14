@@ -8,11 +8,22 @@ import SmartIrrigation from "./components/SmartIrrigation";
 import FarmPlanner from "./components/FarmPlanner";
 import KrishiAssistant from "./components/KrishiAssistant";
 import FarmAnalytics from "./components/FarmAnalytics";
+import FarmRiskCenter from "./components/FarmRiskCenter";
+import AlertCenter from "./components/AlertCenter";
 import ViksitBharat from "./components/ViksitBharat";
 import FarmMap from "./components/FarmMap";
 import ProfileSettings from "./components/ProfileSettings";
 import { translations } from "./translations";
 import confetti from "canvas-confetti";
+import {
+  Menu,
+  Bell,
+  MapPin,
+  Compass,
+  CheckCircle2,
+  Globe2,
+  User
+} from "lucide-react";
 import {
   API_BASE,
   DEFAULT_FALLBACK_FARM,
@@ -26,6 +37,8 @@ import {
 export default function App() {
   const [language, setLanguage] = useState("en");
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   // Core Data States
   const [farm, setFarm] = useState(null);
@@ -39,6 +52,7 @@ export default function App() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [networkError, setNetworkError] = useState(null);
+  const [gpsDetecting, setGpsDetecting] = useState(false);
 
   const t = translations[language] || translations.en;
 
@@ -96,18 +110,21 @@ export default function App() {
 
   // Update Farm API Handler
   const handleUpdateFarm = async (updatedData) => {
-    const res = await fetch(`${API_BASE}/farm`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedData)
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setFarm(data);
-      refreshWeatherAndIrrigation(data.latitude, data.longitude, data.location_name);
-      return data;
+    try {
+      const res = await fetch(`${API_BASE}/farm`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFarm(data);
+        refreshWeatherAndIrrigation(data.latitude, data.longitude, data.location_name);
+        return data;
+      }
+    } catch (e) {
+      setFarm((prev) => ({ ...prev, ...updatedData }));
     }
-    throw new Error("Failed to update farm");
   };
 
   const refreshWeatherAndIrrigation = async (lat, lon, loc) => {
@@ -137,8 +154,28 @@ export default function App() {
         refreshWeatherAndIrrigation(lat, lon, data.location_name);
       }
     } catch (e) {
-      console.error(e);
+      setFarm((prev) => ({ ...prev, latitude: lat, longitude: lon }));
     }
+  };
+
+  // GPS Quick Detect Handler for Header (Section 6)
+  const handleHeaderGpsDetect = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+    setGpsDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        handleUpdateCoordinates(latitude, longitude);
+        setGpsDetecting(false);
+      },
+      (err) => {
+        console.warn("GPS error:", err);
+        setGpsDetecting(false);
+      }
+    );
   };
 
   // Run AI Crop Prediction
@@ -156,13 +193,15 @@ export default function App() {
         return data;
       }
     } catch (e) {
-      console.error("Prediction failed:", e);
+      console.warn("Prediction fallback applied:", e);
+      setRecommendation(DEFAULT_FALLBACK_RECOMMENDATION);
+      return DEFAULT_FALLBACK_RECOMMENDATION;
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  // 60-Second Killer Demo One-Click Runner
+  // 60-Second Demo One-Click Runner
   const handleRunKillerDemoAnalysis = async () => {
     setIsAnalyzing(true);
     try {
@@ -175,17 +214,14 @@ export default function App() {
         ph: farm?.soil_ph || 6.8,
         rainfall: weather?.rainfall_forecast_7d ? Math.max(35, weather.rainfall_forecast_7d * 6) : 75
       };
-      const res = await handleRunPrediction(params);
-      const irrRes = await fetch(`${API_BASE}/smart-irrigation`).then((r) => r.json());
-      setSmartIrrigation(irrRes);
+      await handleRunPrediction(params);
 
-      // Trigger Confetti celebration
       try {
         confetti({
           particleCount: 55,
           spread: 75,
           origin: { y: 0.6 },
-          colors: ["#E2A83B", "#59C7B1", "#1E8A78"]
+          colors: ["#22C55E", "#15803D", "#E2A83B"]
         });
       } catch (e) {
         // Safe fallback
@@ -206,7 +242,9 @@ export default function App() {
         setTasks((prev) => prev.map((t) => (t.id === taskId ? updated : t)));
       }
     } catch (e) {
-      console.error(e);
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, completed: !t.completed } : t))
+      );
     }
   };
 
@@ -222,7 +260,8 @@ export default function App() {
         setTasks((prev) => [created, ...prev]);
       }
     } catch (e) {
-      console.error(e);
+      const fallbackNewTask = { id: Date.now(), ...taskPayload, completed: false };
+      setTasks((prev) => [fallbackNewTask, ...prev]);
     }
   };
 
@@ -233,200 +272,235 @@ export default function App() {
         setTasks((prev) => prev.filter((t) => t.id !== taskId));
       }
     } catch (e) {
-      console.error(e);
+      setTasks((prev) => prev.filter((t) => t.id !== taskId));
     }
   };
 
   if (isInitializing) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center text-[var(--text-primary)] p-4" style={{ background: "var(--bg-canvas)" }}>
-        <div style={{ position: "relative", marginBottom: "2rem" }}>
-          <div style={{ width: 80, height: 80, borderRadius: 20, background: "linear-gradient(135deg, var(--color-harvest), var(--color-harvest-dark))", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", boxShadow: "0 0 40px rgba(233,172,58,0.45), 0 8px 24px rgba(0,0,0,0.4)", animation: "float 2s ease-in-out infinite" }}>
-            🌾
-          </div>
+      <div className="flex min-h-screen flex-col items-center justify-center text-white p-4 bg-[#091912]">
+        <div className="w-16 h-16 rounded-2xl bg-emerald-600 flex items-center justify-center text-2xl shadow-lg mb-4 animate-bounce">
+          🌾
         </div>
-        <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.03em", marginBottom: "0.5rem" }}>
-          KrishiMitra <span style={{ color: "var(--color-harvest)" }}>AI</span> is loading…
+        <h2 className="text-lg font-bold tracking-tight">
+          KrishiMitra <span className="text-emerald-400">AI</span> Command Center
         </h2>
-        <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)", marginBottom: "1.5rem" }}>
-          Hyperlocal Climate-to-Crop Decision Intelligence
+        <p className="text-xs text-slate-400 mt-1">
+          Synchronizing precision agro-meteorological telemetry...
         </p>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          {[0,1,2].map(i => (
-            <div key={i} className="neon-dot neon-dot-saffron" style={{ animationDelay: `${i * 220}ms`, width: 9, height: 9 }} />
-          ))}
-        </div>
       </div>
     );
   }
 
-  // Page label map
+  // Page title mapping
   const pageTitles = {
-    dashboard: { title: "Dashboard", sub: "Live farm overview & telemetry" },
-    myFarm: { title: "My Farm", sub: "Configure your farm parameters" },
-    aiRecommendation: { title: "AI Crop Advisor", sub: "ML-powered crop suitability analysis" },
-    weather: { title: "Weather Intelligence", sub: "Hyperlocal climate telemetry" },
-    smartIrrigation: { title: "Smart Irrigation", sub: "Precision water management" },
-    planner: { title: "Farm Planner", sub: "Task management & scheduling" },
-    assistant: { title: "Krishi Assistant", sub: "Bilingual agronomy Q&A" },
-    analytics: { title: "Farm Analytics", sub: "Performance metrics & insights" },
-    viksitBharat: { title: "Viksit Bharat", sub: "Government schemes & subsidies" },
-    farmMap: { title: "Farm Map", sub: "Geospatial farm visualisation" },
-    profile: { title: "Profile Settings", sub: "Account & preferences" },
+    dashboard: "Dashboard Overview",
+    farmIntelligence: "Farm Intelligence & Field Telemetry",
+    weather: "Weather Intelligence & NWP Forecast",
+    cropIntelligence: "Crop Intelligence & ML Recommendations",
+    diseaseRisk: "Farm Risk Command Center",
+    maps: "Geospatial Agricultural Map",
+    assistant: "Krishi Copilot AI Assistant",
+    analytics: "Farm Performance Analytics",
+    alerts: "Agronomic Alert & Advisory Center",
+    viksitBharat: "Government Official Datasets & Schemes",
+    settings: "Farm Profile & Platform Settings"
   };
-  const currentPage = pageTitles[activeTab] || pageTitles.dashboard;
 
   return (
-    <div className="app-layout">
-      {/* Sidebar + mobile nav */}
+    <div className="app-shell">
+      {/* ── COLLAPSIBLE SIDEBAR (SECTION 5) ── */}
       <Navigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        language={language}
-        setLanguage={setLanguage}
-        farm={farm}
-        weather={weather}
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
+        alertCount={3}
         t={t}
       />
 
-      {/* Right: topbar + page content */}
-      <div className="app-content">
-        {/* Top Bar */}
-        <div className="topbar">
-          <div className="topbar-ticker">
-            <span className="neon-dot neon-dot-cyan" />
-            <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.72rem", color: "var(--color-rain-glow)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Live</span>
-            <span style={{ color: "var(--text-dim)" }}>|</span>
-            <span style={{ fontFamily: "var(--font-heading)", fontWeight: 600 }}>{currentPage.title}</span>
-            <span style={{ color: "var(--text-dim)", fontSize: "0.68rem" }}>— {currentPage.sub}</span>
+      {/* ── MAIN CONTENT AREA ── */}
+      <div className="command-main">
+        {/* ── COMPACT TOP HEADER (SECTION 6) ── */}
+        <header className="command-header">
+          <div className="flex items-center gap-3">
+            {/* Mobile Hamburger Toggle */}
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 md:hidden"
+              title="Open Navigation"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            {/* Breadcrumb / Title */}
+            <div>
+              <div className="text-xs font-bold text-white tracking-tight flex items-center gap-2">
+                <span>KrishiMitra AI</span>
+                <span className="text-slate-500">/</span>
+                <span className="text-emerald-400 font-semibold">{pageTitles[activeTab] || "Overview"}</span>
+              </div>
+            </div>
           </div>
-          <div className="topbar-actions">
-            {weather && (
-              <span className="neon-badge neon-badge-cyan" style={{ gap: "0.4rem" }}>
-                <span>{weather.temperature}°C</span>
-                <span style={{ opacity: 0.5 }}>·</span>
-                <span>RH {weather.humidity}%</span>
+
+          {/* Header Actions */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* Location & GPS Control */}
+            <div className="hidden sm:flex items-center gap-1.5 bg-[#091D14] border border-slate-800 px-2.5 py-1 rounded-lg text-xs">
+              <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="text-slate-300 font-medium truncate max-w-[140px]">
+                {farm?.location_name || `${farm?.district || "Varanasi"}, ${farm?.state || "UP"}`}
               </span>
-            )}
+              <button
+                onClick={handleHeaderGpsDetect}
+                disabled={gpsDetecting}
+                title="Detect Current GPS Location"
+                className="p-0.5 text-slate-400 hover:text-emerald-400 ml-1 transition-colors"
+              >
+                <Compass className={`w-3.5 h-3.5 ${gpsDetecting ? "animate-spin text-emerald-400" : ""}`} />
+              </button>
+            </div>
+
+            {/* AI Status: Online Badge */}
+            <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-950/70 border border-emerald-800/80 text-[10px] font-bold text-emerald-400">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>AI Engine: Online</span>
+            </div>
+
+            {/* Language Selector */}
             <button
               onClick={() => setLanguage(language === "en" ? "hi" : "en")}
-              className="neon-badge neon-badge-saffron"
-              style={{ cursor: "pointer", border: "1px solid var(--border-saffron)" }}
+              className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 hover:text-white hover:border-slate-700 transition-colors flex items-center gap-1.5"
+              title="Toggle Language"
             >
-              {language === "en" ? "हिन्दी" : "EN"}
+              <Globe2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{language === "en" ? "हिन्दी" : "EN"}</span>
+            </button>
+
+            {/* Notification Bell (Links to Alerts tab) */}
+            <button
+              onClick={() => setActiveTab("alerts")}
+              className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 relative transition-colors"
+              title="Agronomic Alerts"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400" />
+            </button>
+
+            {/* Profile Quick Button */}
+            <button
+              onClick={() => setActiveTab("settings")}
+              className="p-1.5 rounded-lg bg-emerald-900/60 border border-emerald-700/70 text-emerald-300 hover:bg-emerald-800 transition-colors"
+              title="Farmer Profile & Settings"
+            >
+              <User className="w-4 h-4" />
             </button>
           </div>
-        </div>
+        </header>
 
-        {/* Page Content */}
-        <div className="page-container">
-          {networkError && (
-            <div style={{ marginBottom: "1.25rem", borderRadius: 12, border: "1px solid rgba(208,96,78,0.40)", background: "rgba(19,42,32,0.80)", padding: "0.85rem 1rem", fontSize: "0.78rem", color: "#fca5a5", fontFamily: "var(--font-mono)" }}>
-              ⚠ {networkError}
-            </div>
+        {/* ── PAGE CONTENT CONTAINER ── */}
+        <main className="command-content">
+          {activeTab === "dashboard" && (
+            <Dashboard
+              farm={farm}
+              weather={weather}
+              smartIrrigation={smartIrrigation}
+              recommendation={recommendation}
+              analytics={analytics}
+              t={t}
+              onRunAiAnalysis={handleRunKillerDemoAnalysis}
+              isAnalyzing={isAnalyzing}
+              onNavigate={setActiveTab}
+            />
           )}
 
-          <div className="animate-fade-up">
-            {activeTab === "dashboard" && (
-              <Dashboard
-                farm={farm}
-                weather={weather}
-                smartIrrigation={smartIrrigation}
-                recommendation={recommendation}
-                analytics={analytics}
-                t={t}
-                onRunAiAnalysis={handleRunKillerDemoAnalysis}
-                isAnalyzing={isAnalyzing}
-                onNavigate={setActiveTab}
-              />
-            )}
+          {activeTab === "farmIntelligence" && (
+            <MyFarm
+              farm={farm}
+              onUpdateFarm={handleUpdateFarm}
+              t={t}
+            />
+          )}
 
-            {activeTab === "myFarm" && (
-              <MyFarm
-                farm={farm}
-                onUpdateFarm={handleUpdateFarm}
-                t={t}
-              />
-            )}
+          {activeTab === "weather" && (
+            <WeatherIntelligence
+              weather={weather}
+              t={t}
+            />
+          )}
 
-            {activeTab === "aiRecommendation" && (
-              <AICropRecommendation
-                farm={farm}
-                weather={weather}
-                recommendation={recommendation}
-                onRunPrediction={handleRunPrediction}
-                isComputing={isAnalyzing}
-                t={t}
-              />
-            )}
+          {activeTab === "cropIntelligence" && (
+            <AICropRecommendation
+              farm={farm}
+              weather={weather}
+              recommendation={recommendation}
+              onRunPrediction={handleRunPrediction}
+              isComputing={isAnalyzing}
+              t={t}
+            />
+          )}
 
-            {activeTab === "weather" && (
-              <WeatherIntelligence
-                weather={weather}
-                t={t}
-              />
-            )}
+          {activeTab === "diseaseRisk" && (
+            <FarmRiskCenter
+              farm={farm}
+              weather={weather}
+              smartIrrigation={smartIrrigation}
+              t={t}
+            />
+          )}
 
-            {activeTab === "smartIrrigation" && (
-              <SmartIrrigation
-                smartIrrigation={smartIrrigation}
-                farm={farm}
-                weather={weather}
-                t={t}
-              />
-            )}
+          {activeTab === "maps" && (
+            <FarmMap
+              farm={farm}
+              onUpdateCoordinates={handleUpdateCoordinates}
+              t={t}
+            />
+          )}
 
-            {activeTab === "planner" && (
-              <FarmPlanner
-                tasks={tasks}
-                onToggleTask={handleToggleTask}
-                onCreateTask={handleCreateTask}
-                onDeleteTask={handleDeleteTask}
-                t={t}
-              />
-            )}
+          {activeTab === "assistant" && (
+            <KrishiAssistant
+              farm={farm}
+              weather={weather}
+              language={language}
+              t={t}
+            />
+          )}
 
-            {activeTab === "assistant" && (
-              <KrishiAssistant
-                farm={farm}
-                weather={weather}
-                language={language}
-                t={t}
-              />
-            )}
+          {activeTab === "analytics" && (
+            <FarmAnalytics
+              analytics={analytics}
+              farm={farm}
+              t={t}
+            />
+          )}
 
-            {activeTab === "analytics" && (
-              <FarmAnalytics
-                analytics={analytics}
-                farm={farm}
-                t={t}
-              />
-            )}
+          {activeTab === "alerts" && (
+            <AlertCenter
+              farm={farm}
+              weather={weather}
+              smartIrrigation={smartIrrigation}
+              t={t}
+            />
+          )}
 
-            {activeTab === "viksitBharat" && (
-              <ViksitBharat
-                t={t}
-              />
-            )}
+          {activeTab === "viksitBharat" && (
+            <ViksitBharat
+              t={t}
+            />
+          )}
 
-            {activeTab === "farmMap" && (
-              <FarmMap
-                farm={farm}
-                onUpdateCoordinates={handleUpdateCoordinates}
-                t={t}
-              />
-            )}
-
-            {activeTab === "profile" && (
-              <ProfileSettings
-                farm={farm}
-                language={language}
-                setLanguage={setLanguage}
-                t={t}
-              />
-            )}
-          </div>
-        </div>
+          {activeTab === "settings" && (
+            <ProfileSettings
+              farm={farm}
+              language={language}
+              setLanguage={setLanguage}
+              t={t}
+            />
+          )}
+        </main>
       </div>
     </div>
   );

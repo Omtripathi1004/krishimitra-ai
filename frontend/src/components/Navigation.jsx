@@ -1,164 +1,164 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   LayoutDashboard,
   Sprout,
-  BrainCircuit,
   CloudSun,
-  Droplets,
-  CalendarDays,
+  BrainCircuit,
+  ShieldAlert,
+  Map,
   MessageSquareText,
   BarChart3,
-  Building2,
-  MapPin,
+  Bell,
   Settings,
-  Languages,
+  Building2,
+  ChevronLeft,
   ChevronRight,
-  Thermometer,
-  Wind
+  Sparkles,
+  Droplets
 } from "lucide-react";
 
-const navGroups = [
-  {
-    label: "Core",
-    items: [
-      { id: "dashboard",       icon: LayoutDashboard,    label: "Dashboard",       accentClass: "" },
-      { id: "myFarm",          icon: Sprout,             label: "My Farm",         accentClass: "" },
-      { id: "aiRecommendation",icon: BrainCircuit,       label: "AI Crop Advisor", accentClass: "active-ai", highlight: true },
-      { id: "weather",         icon: CloudSun,           label: "Weather",         accentClass: "" },
-      { id: "smartIrrigation", icon: Droplets,           label: "Smart Irrigation",accentClass: "" },
-    ]
-  },
-  {
-    label: "Tools",
-    items: [
-      { id: "planner",         icon: CalendarDays,       label: "Farm Planner",    accentClass: "" },
-      { id: "assistant",       icon: MessageSquareText,  label: "Krishi Assistant",accentClass: "" },
-      { id: "analytics",       icon: BarChart3,          label: "Analytics",       accentClass: "" },
-    ]
-  },
-  {
-    label: "More",
-    items: [
-      { id: "viksitBharat",    icon: Building2,          label: "Viksit Bharat",   accentClass: "" },
-      { id: "farmMap",         icon: MapPin,             label: "Farm Map",        accentClass: "" },
-      { id: "profile",         icon: Settings,           label: "Profile",         accentClass: "" },
-    ]
-  }
+export const NAV_ITEMS = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, category: "Overview" },
+  { id: "farmIntelligence", label: "Farm Intelligence", icon: Sprout, category: "Core Operations" },
+  { id: "weather", label: "Weather", icon: CloudSun, category: "Core Operations" },
+  { id: "cropIntelligence", label: "Crop Intelligence", icon: BrainCircuit, badge: "ML", category: "Intelligence" },
+  { id: "diseaseRisk", label: "Disease / Risk", icon: ShieldAlert, category: "Intelligence" },
+  { id: "maps", label: "Maps", icon: Map, category: "Intelligence" },
+  { id: "assistant", label: "AI Assistant", icon: MessageSquareText, category: "Decision Support" },
+  { id: "analytics", label: "Analytics", icon: BarChart3, category: "Decision Support" },
+  { id: "alerts", label: "Alerts", icon: Bell, badge: "3", category: "Decision Support" },
+  { id: "viksitBharat", label: "Govt Datasets", icon: Building2, category: "Policy & Schemes" },
+  { id: "settings", label: "Settings", icon: Settings, category: "System" }
 ];
 
-const mobileItems = [
-  { id: "dashboard",        icon: LayoutDashboard,   label: "Home" },
-  { id: "aiRecommendation", icon: BrainCircuit,      label: "AI Crop" },
-  { id: "weather",          icon: CloudSun,          label: "Weather" },
-  { id: "smartIrrigation",  icon: Droplets,          label: "Irrigation" },
-  { id: "assistant",        icon: MessageSquareText, label: "Assistant" },
-];
-
-export default function Navigation({ activeTab, setActiveTab, language, setLanguage, farm, weather, t }) {
+export default function Navigation({
+  activeTab,
+  setActiveTab,
+  isCollapsed,
+  setIsCollapsed,
+  mobileOpen,
+  setMobileOpen,
+  alertCount = 3,
+  t
+}) {
   return (
     <>
-      {/* ── SIDEBAR (desktop) ── */}
-      <aside className="sidebar animate-fade-left">
-        {/* Brand */}
-        <div className="sidebar-brand">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="sidebar-brand-logo">🌾</div>
-            <div>
-              <div className="sidebar-brand-title">
-                Krishi<span style={{ color: "var(--color-harvest)" }}>Mitra</span>
-              </div>
-              <span className="sidebar-brand-badge">AI Platform</span>
+      {/* Mobile Backdrop */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden"
+        />
+      )}
+
+      {/* Sidebar Shell */}
+      <aside
+        className={`command-sidebar ${
+          isCollapsed ? "sidebar-collapsed" : "sidebar-expanded"
+        } ${mobileOpen ? "mobile-open" : ""}`}
+      >
+        {/* Brand Header */}
+        <div className="h-[60px] flex items-center justify-between px-4 border-b border-[var(--border-subtle)] shrink-0">
+          <div
+            onClick={() => setActiveTab("dashboard")}
+            className="flex items-center gap-2.5 cursor-pointer overflow-hidden select-none"
+          >
+            <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white font-bold text-base shadow-sm shrink-0">
+              🌾
             </div>
+            {!isCollapsed && (
+              <div className="min-w-0">
+                <div className="text-sm font-extrabold tracking-tight text-white flex items-center gap-1.5 leading-tight">
+                  Krishi<span className="text-emerald-400">Mitra</span> AI
+                </div>
+                <div className="text-[10px] text-slate-400 font-medium tracking-wide uppercase">
+                  Agri Command Hub
+                </div>
+              </div>
+            )}
           </div>
-          <p className="text-[11px] mt-2" style={{ color: "var(--text-muted)", lineHeight: 1.4 }}>
-            Hyperlocal Climate-to-Crop Intelligence
-          </p>
         </div>
 
-        {/* Nav groups */}
-        <nav className="sidebar-nav">
-          {navGroups.map(group => (
-            <div key={group.label}>
-              <div className="sidebar-section-label">{group.label}</div>
-              {group.items.map(item => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.id;
-                const cls = isActive
-                  ? item.accentClass || "active"
-                  : "";
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`sidebar-nav-item w-full ${cls}`}
+        {/* Navigation List */}
+        <nav className="flex-1 overflow-y-auto px-2.5 py-4 space-y-1">
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  if (setMobileOpen) setMobileOpen(false);
+                }}
+                title={isCollapsed ? item.label : undefined}
+                className={`nav-btn ${isActive ? "nav-btn-active" : ""} ${
+                  isCollapsed ? "justify-center px-0 py-2.5" : ""
+                }`}
+              >
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-emerald-400" : "text-slate-400"}`} />
+                {!isCollapsed && (
+                  <span className="truncate flex-1 text-xs">{item.label}</span>
+                )}
+                {!isCollapsed && item.badge && (
+                  <span
+                    className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                      item.id === "alerts"
+                        ? "bg-amber-950/80 text-amber-400 border border-amber-800"
+                        : "bg-emerald-950/80 text-emerald-300 border border-emerald-800"
+                    }`}
                   >
-                    <Icon className="sidebar-nav-icon" />
-                    <span>{item.label}</span>
-                    {item.highlight && !isActive && (
-                      <span className="nav-highlight-dot" />
-                    )}
-                    {isActive && (
-                      <ChevronRight className="ml-auto" style={{ width: 13, height: 13, opacity: 0.5 }} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </nav>
 
-        {/* Footer: weather strip + lang toggle */}
-        <div className="sidebar-footer space-y-3">
-          {weather && (
-            <div className="sidebar-weather-strip">
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-1.5" style={{ color: "var(--color-rain-glow)", fontFamily: "var(--font-heading)", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.09em" }}>
-                  <span className="neon-dot neon-dot-cyan" />
-                  Live Telemetry
-                </div>
-                <span style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>{farm?.location_name?.split(",")[0]}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Thermometer style={{ width: 13, height: 13, color: "var(--color-harvest)" }} />
-                  <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.85rem", color: "var(--text-primary)" }}>{weather.temperature}°C</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Wind style={{ width: 12, height: 12, color: "var(--color-rain-glow)" }} />
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--text-secondary)" }}>{weather.wind_speed} km/h</span>
-                </div>
-              </div>
-              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "0.3rem", textTransform: "capitalize" }}>{weather.condition}</div>
+        {/* Sidebar Footer / Collapse Toggle (Desktop only) */}
+        <div className="hidden md:flex p-2.5 border-t border-[var(--border-subtle)] shrink-0 justify-between items-center bg-[#081710]">
+          {!isCollapsed && (
+            <div className="flex items-center gap-2 text-[11px] text-slate-400 px-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Engine Online</span>
             </div>
           )}
-
           <button
-            onClick={() => setLanguage(language === "en" ? "hi" : "en")}
-            className="btn btn-secondary w-full text-xs py-2"
-            style={{ justifyContent: "center", gap: "0.5rem" }}
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className={`p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors ${
+              isCollapsed ? "mx-auto" : ""
+            }`}
+            title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            <Languages style={{ width: 14, height: 14 }} />
-            <span>{language === "en" ? "हिन्दी में बदलें" : "Switch to English"}</span>
+            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
-
-          <div style={{ fontSize: "0.62rem", color: "var(--text-dim)", textAlign: "center", fontFamily: "var(--font-heading)" }}>
-            KrishiMitra AI v2.5 · Powered by FastAPI + React
-          </div>
         </div>
       </aside>
 
-      {/* ── MOBILE BOTTOM NAV ── */}
-      <nav className="mobile-nav-bar">
-        {mobileItems.map(item => {
-          const Icon = item.icon;
+      {/* Mobile Bottom Navigation (Visible on mobile screens) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-[#0B1D15] border-t border-[var(--border-subtle)] flex items-center justify-around px-2 z-30">
+        {[
+          { id: "dashboard", label: "Home", icon: LayoutDashboard },
+          { id: "farmIntelligence", label: "Farm", icon: Sprout },
+          { id: "cropIntelligence", label: "Advisor", icon: BrainCircuit },
+          { id: "diseaseRisk", label: "Risk", icon: ShieldAlert },
+          { id: "assistant", label: "Copilot", icon: MessageSquareText },
+          { id: "alerts", label: "Alerts", icon: Bell }
+        ].map((m) => {
+          const Icon = m.icon;
+          const isAct = activeTab === m.id;
           return (
             <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`mobile-nav-item ${activeTab === item.id ? "active" : ""}`}
+              key={m.id}
+              onClick={() => setActiveTab(m.id)}
+              className={`flex flex-col items-center justify-center w-12 py-1 transition-colors ${
+                isAct ? "text-emerald-400" : "text-slate-400 hover:text-slate-200"
+              }`}
             >
-              <Icon />
-              <span>{item.label}</span>
+              <Icon className="w-4 h-4" />
+              <span className="text-[9px] font-semibold mt-0.5 tracking-tight">{m.label}</span>
             </button>
           );
         })}
