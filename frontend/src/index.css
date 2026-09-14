@@ -704,3 +704,75 @@ body::before {
     padding-bottom: 5.5rem;
   }
 }
+
+/* ── CURRENT LOCATION RADAR POINTER ── */
+.current-location-marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.current-location-pin {
+  width: 38px;
+  height: 38px;
+  border-radius: 50% 50% 50% 0;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: 3px solid #ffffff;
+  transform: rotate(-45deg);
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 10;
+}
+.current-location-pin:hover {
+  transform: rotate(-45deg) scale(1.12);
+  box-shadow: 0 6px 28px rgba(16, 185, 129, 0.95);
+}
+.current-location-icon {
+  transform: rotate(45deg);
+  font-size: 18px;
+  line-height: 1;
+}
+.current-location-radar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.35);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: radar-pulse 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+.current-location-radar-2 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.35);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: radar-pulse 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) 1s infinite;
+}
+
+@keyframes radar-pulse {
+  0% {
+    width: 20px;
+    height: 20px;
+    opacity: 0.95;
+    border: 2px solid #34d399;
+  }
+  100% {
+    width: 96px;
+    height: 96px;
+    opacity: 0;
+    border: 1.5px solid rgba(52, 211, 153, 0.1);
+  }
+}
+

@@ -13,6 +13,8 @@ import AlertCenter from "./components/AlertCenter";
 import ViksitBharat from "./components/ViksitBharat";
 import FarmMap from "./components/FarmMap";
 import ProfileSettings from "./components/ProfileSettings";
+import LoginPage, { DEMO_FARMER_ACCOUNTS } from "./components/LoginPage";
+import { INDIA_STATES_DATA, findNearestIndianDistrict } from "./data/indiaLocations";
 import { translations } from "./translations";
 import confetti from "canvas-confetti";
 import {
@@ -22,7 +24,11 @@ import {
   Compass,
   CheckCircle2,
   Globe2,
-  User
+  User,
+  LogOut,
+  ChevronDown,
+  Sparkles,
+  Crosshair
 } from "lucide-react";
 import {
   API_BASE,
@@ -39,6 +45,20 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Authentication State (Separate Login Page)
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem("km_user");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Top Header Location Switcher Modal / Dropdown
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [headerSelectedState, setHeaderSelectedState] = useState("Punjab");
 
   // Core Data States
   const [farm, setFarm] = useState(null);
@@ -162,25 +182,59 @@ export default function App() {
     }
   };
 
-  // Update coordinates from Map
-  const handleUpdateCoordinates = async (lat, lon) => {
+  // Update coordinates, location name, and soil from Map or Dropdown
+  const handleUpdateCoordinates = async (lat, lon, locationName, soilType, extraFields = {}) => {
+    const payload = {
+      latitude: lat,
+      longitude: lon,
+      ...(locationName ? { location_name: locationName } : {}),
+      ...(soilType ? { soil_type: soilType } : {}),
+      ...extraFields
+    };
     try {
       const res = await fetch(`${API_BASE}/farm`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ latitude: lat, longitude: lon })
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         const data = await res.json();
         setFarm(data);
         refreshWeatherAndIrrigation(lat, lon, data.location_name);
+        return data;
       }
     } catch (e) {
-      setFarm((prev) => ({ ...prev, latitude: lat, longitude: lon }));
+      setFarm((prev) => ({ ...prev, ...payload }));
+      refreshWeatherAndIrrigation(lat, lon, locationName || farm?.location_name || "Farm Parcel");
     }
   };
 
-  // GPS Quick Detect Handler for Header (Section 6)
+  // User Login Handler (Stores user and syncs profile with farm)
+  const handleUserLogin = (userProfile) => {
+    setCurrentUser(userProfile);
+    localStorage.setItem("km_user", JSON.stringify(userProfile));
+    handleUpdateCoordinates(
+      userProfile.latitude,
+      userProfile.longitude,
+      userProfile.location_name,
+      userProfile.soil_type,
+      {
+        farmer_name: userProfile.farmer_name,
+        farm_name: userProfile.farm_name,
+        area_acres: userProfile.area_acres,
+        current_crop: userProfile.current_crop,
+        crop_stage: userProfile.crop_stage
+      }
+    );
+  };
+
+  // User Logout Handler
+  const handleLogout = () => {
+    localStorage.removeItem("km_user");
+    setCurrentUser(null);
+  };
+
+  // GPS Quick Detect Handler for Header (Accurately resolves nearest Indian District)
   const handleHeaderGpsDetect = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser.");
@@ -190,13 +244,16 @@ export default function App() {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        handleUpdateCoordinates(latitude, longitude);
+        const nearest = findNearestIndianDistrict(latitude, longitude);
+        const resolvedName = `${nearest.name}, ${nearest.state}, India (GPS Fix)`;
+        handleUpdateCoordinates(latitude, longitude, resolvedName, nearest.soil);
         setGpsDetecting(false);
       },
       (err) => {
         console.warn("GPS error:", err);
         setGpsDetecting(false);
-      }
+      },
+      { timeout: 8000, enableHighAccuracy: true }
     );
   };
 
@@ -314,6 +371,17 @@ export default function App() {
     );
   }
 
+  // Render separate dedicated Login Page if farmer is not signed in
+  if (!currentUser) {
+    return (
+      <LoginPage
+        onLogin={handleUserLogin}
+        language={language}
+        setLanguage={setLanguage}
+      />
+    );
+  }
+
   // Page title mapping
   const pageTitles = {
     dashboard: "Dashboard Overview",
@@ -374,20 +442,100 @@ export default function App() {
 
           {/* Header Actions */}
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {/* Location & GPS Control */}
-            <div className="hidden sm:flex items-center gap-1.5 bg-[#091D14] border border-slate-800 px-2.5 py-1 rounded-lg text-xs">
-              <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span className="text-slate-300 font-medium truncate max-w-[140px]">
-                {farm?.location_name || `${farm?.district || "Varanasi"}, ${farm?.state || "UP"}`}
-              </span>
-              <button
-                onClick={handleHeaderGpsDetect}
-                disabled={gpsDetecting}
-                title="Detect Current GPS Location"
-                className="p-0.5 text-slate-400 hover:text-emerald-400 ml-1 transition-colors"
+            {/* Location & GPS Control with Interactive NovaVarsha AI Dropdown */}
+            <div className="relative">
+              <div
+                onClick={() => setShowLocationPicker(!showLocationPicker)}
+                className="hidden sm:flex items-center gap-1.5 bg-[#091D14] border border-slate-800 hover:border-emerald-500/60 px-2.5 py-1 rounded-lg text-xs cursor-pointer transition-colors"
+                title="Change Farm Location (State & District)"
               >
-                <Compass className={`w-3.5 h-3.5 ${gpsDetecting ? "animate-spin text-emerald-400" : ""}`} />
-              </button>
+                <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="text-slate-200 font-bold truncate max-w-[150px]">
+                  {farm?.location_name?.split(",")[0] || farm?.location_name || "Select Farm"}
+                </span>
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleHeaderGpsDetect();
+                  }}
+                  disabled={gpsDetecting}
+                  title="Detect Current GPS Location"
+                  className="p-0.5 text-slate-400 hover:text-emerald-400 ml-1 transition-colors"
+                >
+                  <Compass className={`w-3.5 h-3.5 ${gpsDetecting ? "animate-spin text-emerald-400" : ""}`} />
+                </button>
+              </div>
+
+              {/* Floating Dropdown Modal */}
+              {showLocationPicker && (
+                <div className="absolute top-full mt-2 left-0 w-80 p-4 rounded-2xl bg-[#091912] border border-emerald-500/40 shadow-2xl z-[2000] space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Select Agro-Location
+                    </span>
+                    <button
+                      onClick={() => setShowLocationPicker(false)}
+                      className="text-slate-400 hover:text-white text-xs font-bold"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* State Select */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">State</label>
+                    <select
+                      value={headerSelectedState}
+                      onChange={(e) => setHeaderSelectedState(e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold focus:border-emerald-500 focus:outline-none"
+                    >
+                      {INDIA_STATES_DATA.map((s) => (
+                        <option key={s.state} value={s.state}>
+                          {s.state}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* District Select */}
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">District / Agro-Zone</label>
+                    <select
+                      onChange={(e) => {
+                        const dist = INDIA_STATES_DATA.find((s) => s.state === headerSelectedState)?.districts.find(
+                          (d) => d.name === e.target.value
+                        );
+                        if (dist) {
+                          handleUpdateCoordinates(dist.lat, dist.lon, `${dist.name}, ${headerSelectedState}, India`, dist.soil);
+                          setShowLocationPicker(false);
+                        }
+                      }}
+                      className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold focus:border-emerald-500 focus:outline-none"
+                    >
+                      <option value="">-- Choose District --</option>
+                      {(INDIA_STATES_DATA.find((s) => s.state === headerSelectedState)?.districts || []).map((d) => (
+                        <option key={d.name} value={d.name}>
+                          {d.name} ({d.crop})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Live GPS Button */}
+                  <button
+                    onClick={() => {
+                      handleHeaderGpsDetect();
+                      setShowLocationPicker(false);
+                    }}
+                    className="w-full py-2 rounded-lg bg-emerald-600/30 border border-emerald-500/50 hover:bg-emerald-600 text-emerald-300 hover:text-white transition-colors text-xs font-bold flex items-center justify-center gap-1.5"
+                  >
+                    <Compass className="w-3.5 h-3.5" />
+                    <span>Detect My Current GPS</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* AI Status: Online Badge */}
@@ -443,13 +591,27 @@ export default function App() {
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400" />
             </button>
 
-            {/* Profile Avatar */}
-            <button
+            {/* Farmer Profile Badge */}
+            <div
               onClick={() => setActiveTab("settings")}
-              className="p-1.5 rounded-lg bg-emerald-900/60 border border-emerald-700/70 text-emerald-300 hover:bg-emerald-800 transition-colors"
-              title="Farmer Profile & Settings"
+              className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition-colors text-xs"
+              title="View Farmer Profile"
             >
-              <User className="w-4 h-4" />
+              <div className="w-6 h-6 rounded-full bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 flex items-center justify-center font-bold text-xs">
+                🌾
+              </div>
+              <span className="text-white font-bold max-w-[100px] truncate">
+                {currentUser?.farmer_name || farm?.farmer_name || "Farmer"}
+              </span>
+            </div>
+
+            {/* Logout / Switch Account Button */}
+            <button
+              onClick={handleLogout}
+              className="p-1.5 rounded-lg bg-red-950/30 border border-red-800/50 text-red-300 hover:bg-red-900/50 hover:text-white transition-colors"
+              title="Sign Out / Switch Farmer Account"
+            >
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </header>
@@ -620,6 +782,8 @@ export default function App() {
           {activeTab === "settings" && (
             <ProfileSettings
               farm={farm}
+              currentUser={currentUser}
+              onLogout={handleLogout}
               language={language}
               setLanguage={setLanguage}
               fontSize={fontSize}

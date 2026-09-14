@@ -7,11 +7,14 @@ import {
   CheckCircle2,
   FileText,
   Sliders,
-  ShieldCheck
+  ShieldCheck,
+  LogOut
 } from "lucide-react";
 
 export default function ProfileSettings({
   farm,
+  currentUser,
+  onLogout,
   language,
   setLanguage,
   fontSize,
@@ -114,6 +117,18 @@ export default function ProfileSettings({
               <strong className="text-white">{farm?.current_crop || "Wheat"} ({farm?.crop_stage || "Vegetative"})</strong>
             </div>
           </div>
+
+          {onLogout && (
+            <div className="pt-3 border-t border-[var(--border)]">
+              <button
+                onClick={onLogout}
+                className="w-full py-2.5 px-3 rounded-xl bg-red-950/30 border border-red-500/40 text-red-300 hover:bg-red-900/40 hover:text-white transition-all text-xs font-bold flex items-center justify-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Switch Farmer Account / Sign Out</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Units & Localization */}
