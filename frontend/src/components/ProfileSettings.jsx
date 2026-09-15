@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   LogOut
 } from "lucide-react";
+import { toHindiDigits, localizeTerm } from "../translations";
 
 export default function ProfileSettings({
   farm,
@@ -21,8 +22,12 @@ export default function ProfileSettings({
   setFontSize,
   contrastMode,
   setContrastMode,
-  t
+  t,
+  isHindi: propIsHindi
 }) {
+  const isHindi = propIsHindi || language === "hi" || Boolean(t?.liveTelemetry?.includes("सजीव"));
+  const num = (v) => (isHindi ? toHindiDigits(v) : String(v));
+
   const [unitArea, setUnitArea] = useState("Acres");
   const [unitTemp, setUnitTemp] = useState("Celsius (°C)");
   const [reportExported, setReportExported] = useState(false);
@@ -56,12 +61,16 @@ export default function ProfileSettings({
               <Settings className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-                {t?.tabs?.profile || "System Settings"} & Telemetry Configuration
-                <span className="badge badge-emerald text-xs font-semibold">Active</span>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2.5 flex-wrap">
+                {isHindi ? "सिस्टम सेटिंग्स एवं टेलीमेट्री कॉन्फ़िगरेशन" : "System Settings & Telemetry Configuration"}
+                <span className="badge badge-emerald text-xs font-semibold">
+                  {isHindi ? "सक्रिय" : "Active"}
+                </span>
               </h1>
               <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                Manage agro-meteorological units, bilingual localization, and export historical farm decision records
+                {isHindi
+                  ? "कृषि-मौसम इकाइयां, द्विभाषी स्थानीयकरण और ऐतिहासिक निर्णय रिकॉर्ड का प्रबंधन करें"
+                  : "Manage agro-meteorological units, bilingual localization, and export historical farm decision records"}
               </p>
             </div>
           </div>
@@ -72,14 +81,18 @@ export default function ProfileSettings({
           className="btn btn-primary text-xs py-2.5 px-4 shadow-md flex items-center gap-2"
         >
           <Download className="w-4 h-4" />
-          <span>Export Farm JSON Record</span>
+          <span>{isHindi ? "खेत JSON रिकॉर्ड डाउनलोड करें" : "Export Farm JSON Record"}</span>
         </button>
       </div>
 
       {reportExported && (
         <div className="p-3.5 rounded-xl bg-[var(--primary)]/20 border border-[var(--primary)] text-xs text-[var(--leaf)] flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-          <span>Comprehensive farm telemetry decision record downloaded successfully!</span>
+          <span>
+            {isHindi
+              ? "व्यापक खेत टेलीमेट्री निर्णय रिकॉर्ड सफलतापूर्वक डाउनलोड हो गया!"
+              : "Comprehensive farm telemetry decision record downloaded successfully!"}
+          </span>
         </div>
       )}
 
@@ -90,31 +103,33 @@ export default function ProfileSettings({
           <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
             <div className="flex items-center gap-2 text-sm font-bold text-white">
               <User className="w-4 h-4 text-[var(--harvest)]" />
-              <span>Registered Agronomic Holding</span>
+              <span>{isHindi ? "पंजीकृत कृषि जोत प्रोफ़ाइल" : "Registered Agronomic Holding"}</span>
             </div>
-            <span className="badge badge-emerald text-xs">Verified</span>
+            <span className="badge badge-emerald text-xs">{isHindi ? "सत्यापित" : "Verified"}</span>
           </div>
 
           <div className="space-y-3 text-xs font-mono">
             <div className="flex justify-between py-2 border-b border-[var(--border-subtle)]">
-              <span className="text-[var(--text-muted)] font-sans">Primary Agronomist / Farmer:</span>
-              <strong className="text-white">{farm?.farmer_name || "Sardar Gurpreet Singh"}</strong>
+              <span className="text-[var(--text-muted)] font-sans">{isHindi ? "मुख्य किसान:" : "Primary Agronomist / Farmer:"}</span>
+              <strong className="text-white">{farm?.farmer_name || (isHindi ? "सरदार गुरप्रीत सिंह" : "Sardar Gurpreet Singh")}</strong>
             </div>
             <div className="flex justify-between py-2 border-b border-[var(--border-subtle)]">
-              <span className="text-[var(--text-muted)] font-sans">Farm Holding Name:</span>
-              <strong className="text-white">{farm?.farm_name || "Majha Agro Fields"}</strong>
+              <span className="text-[var(--text-muted)] font-sans">{isHindi ? "खेत / जोत का नाम:" : "Farm Holding Name:"}</span>
+              <strong className="text-white">{farm?.farm_name || (isHindi ? "मांझा एग्रो फार्म्स" : "Majha Agro Fields")}</strong>
             </div>
             <div className="flex justify-between py-2 border-b border-[var(--border-subtle)]">
-              <span className="text-[var(--text-muted)] font-sans">Territory & Agro Zone:</span>
-              <strong className="text-white">{farm?.location_name || "Ludhiana, Punjab"}</strong>
+              <span className="text-[var(--text-muted)] font-sans">{isHindi ? "स्थान एवं क्षेत्र:" : "Territory & Agro Zone:"}</span>
+              <strong className="text-white">{farm?.location_name || (isHindi ? "लुधियाना, पंजाब" : "Ludhiana, Punjab")}</strong>
             </div>
             <div className="flex justify-between py-2 border-b border-[var(--border-subtle)]">
-              <span className="text-[var(--text-muted)] font-sans">Total Geofenced Area:</span>
-              <strong className="text-[var(--leaf)]">{farm?.area_acres || 5.0} Acres</strong>
+              <span className="text-[var(--text-muted)] font-sans">{isHindi ? "कुल रकबा:" : "Total Geofenced Area:"}</span>
+              <strong className="text-[var(--leaf)]">{num(farm?.area_acres || 5.0)} {isHindi ? "एकड़" : "Acres"}</strong>
             </div>
             <div className="flex justify-between py-2">
-              <span className="text-[var(--text-muted)] font-sans">Standing Crop:</span>
-              <strong className="text-white">{farm?.current_crop || "Wheat"} ({farm?.crop_stage || "Vegetative"})</strong>
+              <span className="text-[var(--text-muted)] font-sans">{isHindi ? "वर्तमान फसल:" : "Standing Crop:"}</span>
+              <strong className="text-white">
+                {localizeTerm(farm?.current_crop || "Wheat", isHindi)} ({localizeTerm(farm?.crop_stage || "Vegetative", isHindi)})
+              </strong>
             </div>
           </div>
 
@@ -125,7 +140,7 @@ export default function ProfileSettings({
                 className="w-full py-2.5 px-3 rounded-xl bg-red-950/30 border border-red-500/40 text-red-300 hover:bg-red-900/40 hover:text-white transition-all text-xs font-bold flex items-center justify-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Switch Farmer Account / Sign Out</span>
+                <span>{isHindi ? "खाता बदलें / साइन आउट करें" : "Switch Farmer Account / Sign Out"}</span>
               </button>
             </div>
           )}
@@ -136,13 +151,15 @@ export default function ProfileSettings({
           <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
             <div className="flex items-center gap-2 text-sm font-bold text-white">
               <Globe className="w-4 h-4 text-[var(--sky)]" />
-              <span>Language & Telemetry Units</span>
+              <span>{isHindi ? "भाषा एवं टेलीमेट्री इकाइयां" : "Language & Telemetry Units"}</span>
             </div>
           </div>
 
           <div className="space-y-4 text-xs">
             <div>
-              <label className="block text-[var(--text-secondary)] mb-1.5 font-medium">Platform Language</label>
+              <label className="block text-[var(--text-secondary)] mb-1.5 font-medium">
+                {isHindi ? "प्लेटफ़ॉर्म भाषा" : "Platform Language"}
+              </label>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -153,7 +170,7 @@ export default function ProfileSettings({
                       : "bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--border)] hover:text-white"
                   }`}
                 >
-                  English (Default)
+                  English (अंग्रेज़ी)
                 </button>
                 <button
                   type="button"
@@ -170,40 +187,51 @@ export default function ProfileSettings({
             </div>
 
             <div>
-              <label className="block text-[var(--text-secondary)] mb-1.5 font-medium">Area Unit Preference</label>
+              <label className="block text-[var(--text-secondary)] mb-1.5 font-medium">
+                {isHindi ? "रकबा मापन इकाई" : "Area Unit Preference"}
+              </label>
               <div className="flex gap-2">
-                {["Acres", "Hectares", "Bigha"].map((unit) => (
+                {[
+                  { en: "Acres", hi: "एकड़" },
+                  { en: "Hectares", hi: "हेक्टेयर" },
+                  { en: "Bigha", hi: "बीघा" }
+                ].map((unitObj) => (
                   <button
-                    key={unit}
+                    key={unitObj.en}
                     type="button"
-                    onClick={() => setUnitArea(unit)}
+                    onClick={() => setUnitArea(unitObj.en)}
                     className={`flex-1 rounded-xl py-2 text-xs font-semibold border transition-all ${
-                      unitArea === unit
-                        ? "bg-[var(--surface-2)] text-[var(--leaf)] border-[var(--primary)]"
+                      unitArea === unitObj.en
+                        ? "bg-[var(--surface-2)] text-[var(--leaf)] border-[var(--primary)] font-bold"
                         : "bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:text-white"
                     }`}
                   >
-                    {unit}
+                    {isHindi ? unitObj.hi : unitObj.en}
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="block text-[var(--text-secondary)] mb-1.5 font-medium">Temperature Metric</label>
+              <label className="block text-[var(--text-secondary)] mb-1.5 font-medium">
+                {isHindi ? "तापमान मापक" : "Temperature Metric"}
+              </label>
               <div className="flex gap-2">
-                {["Celsius (°C)", "Fahrenheit (°F)"].map((unit) => (
+                {[
+                  { en: "Celsius (°C)", hi: "सेल्सियस (°C)" },
+                  { en: "Fahrenheit (°F)", hi: "फ़ारेनहाइट (°F)" }
+                ].map((unitObj) => (
                   <button
-                    key={unit}
+                    key={unitObj.en}
                     type="button"
-                    onClick={() => setUnitTemp(unit)}
+                    onClick={() => setUnitTemp(unitObj.en)}
                     className={`flex-1 rounded-xl py-2 text-xs font-semibold border transition-all ${
-                      unitTemp === unit
+                      unitTemp === unitObj.en
                         ? "bg-[var(--surface-2)] text-[var(--leaf)] border-[var(--primary)] font-bold"
                         : "bg-[var(--surface-2)] text-[var(--text-muted)] border-[var(--border)] hover:text-white"
                     }`}
                   >
-                    {unit}
+                    {isHindi ? unitObj.hi : unitObj.en}
                   </button>
                 ))}
               </div>
@@ -217,25 +245,27 @@ export default function ProfileSettings({
         <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
           <div className="flex items-center gap-2 text-sm font-bold text-white">
             <Sliders className="w-4 h-4 text-[var(--harvest)]" />
-            <span>Display Typography & Visual Contrast Controls</span>
+            <span>{isHindi ? "टाइपोग्राफी एवं दृश्य कंट्रास्ट नियंत्रण" : "Display Typography & Visual Contrast Controls"}</span>
           </div>
-          <span className="badge badge-emerald text-xs">WCAG AAA Ready</span>
+          <span className="badge badge-emerald text-xs">{isHindi ? "WCAG AAA प्रमाणित" : "WCAG AAA Ready"}</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
           {/* Font Size Scaling */}
           <div className="space-y-2">
             <label className="block text-white font-bold">
-              Text Font Size Scaling
+              {isHindi ? "अक्षर आकार (Font Size)" : "Text Font Size Scaling"}
             </label>
             <p className="text-[11px] text-[var(--text-secondary)] mb-2">
-              Scale all text across dashboards, tables, metrics, and advisory panels.
+              {isHindi
+                ? "डैशबोर्ड, टेबल, मेट्रिक्स और सलाह फलकों पर सभी अक्षरों का आकार बदलें।"
+                : "Scale all text across dashboards, tables, metrics, and advisory panels."}
             </p>
             <div className="flex gap-2">
               {[
-                { id: "normal", label: "Normal (100%)", size: "15.5px" },
-                { id: "large", label: "Large (115%)", size: "17.5px" },
-                { id: "xl", label: "Extra Large (130%)", size: "19.5px" }
+                { id: "normal", label: isHindi ? "सामान्य (१००%)" : "Normal (100%)" },
+                { id: "large", label: isHindi ? "बड़ा (११५%)" : "Large (115%)" },
+                { id: "xl", label: isHindi ? "अति बड़ा (१३०%)" : "Extra Large (130%)" }
               ].map((opt) => (
                 <button
                   key={opt.id}
@@ -256,15 +286,17 @@ export default function ProfileSettings({
           {/* Contrast Mode */}
           <div className="space-y-2">
             <label className="block text-white font-bold">
-              Visual Color Contrast Level
+              {isHindi ? "दृश्य रंग कंट्रास्ट स्तर" : "Visual Color Contrast Level"}
             </label>
             <p className="text-[11px] text-[var(--text-secondary)] mb-2">
-              Enhance visibility under harsh outdoor sunlight or high-glare field environments.
+              {isHindi
+                ? "खेत में तेज धूप या चकाचौंध में स्क्रीन की स्पष्टता बढ़ाएं।"
+                : "Enhance visibility under harsh outdoor sunlight or high-glare field environments."}
             </p>
             <div className="flex gap-2">
               {[
-                { id: "normal", label: "Standard Contrast", icon: "🌱" },
-                { id: "high", label: "Ultra-High Contrast (OLED)", icon: "◐" }
+                { id: "normal", label: isHindi ? "मानक कंट्रास्ट" : "Standard Contrast", icon: "🌱" },
+                { id: "high", label: isHindi ? "अल्ट्रा-हाई (OLED)" : "Ultra-High Contrast (OLED)", icon: "◐" }
               ].map((c) => (
                 <button
                   key={c.id}
@@ -287,13 +319,17 @@ export default function ProfileSettings({
         {/* Live Typography Preview Box */}
         <div className="p-4 rounded-xl bg-[var(--surface-2)] border border-[var(--border)] space-y-1 mt-2">
           <span className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider font-bold">
-            Live Readability Preview:
+            {isHindi ? "सजीव पठनीयता पूर्वावलोकन:" : "Live Readability Preview:"}
           </span>
           <p className="text-white font-bold text-sm">
-            🌾 Wheat Crop (PBW-343) • Volumetric Water Content: 68% • Irrigation Status: HOLD
+            {isHindi
+              ? "🌾 गेहूं की फसल (PBW-343) • जड़-क्षेत्र मृदा नमी: ६८% • सिंचाई स्थिति: रोकें"
+              : "🌾 Wheat Crop (PBW-343) • Volumetric Water Content: 68% • Irrigation Status: HOLD"}
           </p>
           <p className="text-xs text-[var(--text-secondary)]">
-            High contrast text ensures agronomists and farmers can effortlessly read telemetry in all outdoor lighting conditions.
+            {isHindi
+              ? "उच्च कंट्रास्ट से किसान तेज धूप में भी सभी डेटा और सलाह आसानी से पढ़ सकते हैं।"
+              : "High contrast text ensures agronomists and farmers can effortlessly read telemetry in all outdoor lighting conditions."}
           </p>
         </div>
       </div>

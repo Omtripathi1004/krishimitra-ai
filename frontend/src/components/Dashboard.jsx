@@ -27,6 +27,7 @@ import {
   Flame,
   Award
 } from "lucide-react";
+import { toHindiDigits, localizeTerm } from "../translations";
 
 /* ── Animated number counter hook ── */
 function useCountUp(target, duration = 800) {
@@ -89,11 +90,14 @@ function KPICard({
   color,
   ringValue,
   ringMax,
-  ringColor
+  ringColor,
+  isHindi = false
 }) {
   const animated = useCountUp(value);
   const isPositive = trendUp === true;
   const isNegative = trendUp === false;
+  const rawNum = Number.isInteger(parseFloat(value)) ? Math.round(animated) : animated;
+  const displayNum = isHindi ? toHindiDigits(rawNum) : rawNum;
 
   const themeClasses = {
     gold: "card-gold border-[rgba(245,158,11,0.4)]",
@@ -128,7 +132,7 @@ function KPICard({
                 textShadow: `0 0 16px ${color}50`
               }}
             >
-              {Number.isInteger(parseFloat(value)) ? Math.round(animated) : animated}
+              {displayNum}
             </span>
             <span className="text-xs font-bold text-slate-300 font-mono">{unit}</span>
           </div>
@@ -141,12 +145,12 @@ function KPICard({
               className="absolute inset-0 flex items-center justify-center text-[11px] font-mono font-extrabold"
               style={{ color: ringColor || color }}
             >
-              {ringValue}%
+              {isHindi ? toHindiDigits(ringValue) : ringValue}%
             </div>
           </div>
         ) : (
           <div
-            className="p-2.5 rounded-xl border shadow-sm flex items-center justify-center"
+            className="p-3 rounded-2xl border flex items-center justify-center shadow-lg"
             style={{
               background: `${color}18`,
               borderColor: `${color}40`,
@@ -178,7 +182,7 @@ function KPICard({
 }
 
 /* ── Multi-Colored Subsystem Module Tile ── */
-function ModuleTile({ title, eyebrow, icon: Icon, theme, stats, onNavigate, target }) {
+function ModuleTile({ title, eyebrow, icon: Icon, theme, stats, onNavigate, target, isHindi = false }) {
   const themeCardClass = {
     sky: "card-sky hover:border-sky-400",
     indigo: "card-indigo hover:border-indigo-400",
@@ -219,9 +223,9 @@ function ModuleTile({ title, eyebrow, icon: Icon, theme, stats, onNavigate, targ
 
           <button
             onClick={() => onNavigate(target)}
-            className="flex items-center gap-1 text-xs font-bold text-white hover:underline transition-all group"
+            className="flex items-center gap-1 text-xs font-bold text-white hover:underline transition-all group cursor-pointer"
           >
-            <span>Launch</span>
+            <span>{isHindi ? "खोलें" : "Launch"}</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
@@ -242,11 +246,15 @@ function ModuleTile({ title, eyebrow, icon: Icon, theme, stats, onNavigate, targ
 }
 
 /* ── AI Recommendation Banner (Vibrant Pink & Golden Theme) ── */
-function AIBanner({ recommendation, smartIrrigation, onNavigate }) {
+function AIBanner({ recommendation, smartIrrigation, onNavigate, isHindi = false }) {
   const [expanded, setExpanded] = useState(false);
 
   const irrData = smartIrrigation?.irrigation_data || smartIrrigation || {};
   const isWait = irrData.status === "Wait" || !irrData.status;
+
+  const directiveTitle = isHindi
+    ? (isWait ? "सिंचाई चक्र २४-३६ घंटों के लिए स्थगित रखें" : "नियोजित ड्रिप सिंचाई चक्र प्रारंभ करें")
+    : (isWait ? "Hold Scheduled Irrigation Cycle by 24–36 Hours" : "Initiate Scheduled Micro-Emitter Cycle");
 
   return (
     <div className="p-6 rounded-3xl relative overflow-hidden card-pink border-l-4 border-l-rose-500 shadow-2xl">
@@ -259,37 +267,40 @@ function AIBanner({ recommendation, smartIrrigation, onNavigate }) {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-2">
               <span className="badge badge-pink text-xs">
-                ⚡ CRITICAL AI DIRECTIVE
+                ⚡ {isHindi ? "महत्वपूर्ण AI कृषि निर्देश" : "CRITICAL AI DIRECTIVE"}
               </span>
               <span className="badge badge-gold text-xs">
-                AI Confidence: 87%
+                {isHindi ? "AI विश्वसनीयता: ८७%" : "AI Confidence: 87%"}
               </span>
               <span className="badge badge-sky text-xs">
-                NWP Radar + Hydrology
+                {isHindi ? "मौसम रडार + जल विज्ञान" : "NWP Radar + Hydrology"}
               </span>
             </div>
 
             <h2 className="text-lg sm:text-xl font-extrabold text-white font-display tracking-tight leading-snug mb-1.5">
-              {isWait
-                ? "Hold Scheduled Irrigation Cycle by 24–36 Hours"
-                : "Initiate Scheduled Micro-Emitter Cycle"}
+              {directiveTitle}
             </h2>
 
             <p className="text-xs sm:text-sm text-slate-200 leading-relaxed max-w-3xl">
-              <strong className="text-rose-300 font-bold">Agronomic Rationale:</strong> 14.5 mm convective precipitation inbound over the next 48h while root-zone moisture is already at an optimal <strong className="text-sky-300">68% VWC</strong>. Deferring the solar/grid pumping cycle conserves <strong className="text-amber-300">₹850 in energy</strong> and prevents soil nitrogen leaching.
+              <strong className="text-rose-300 font-bold">{isHindi ? "कृषि वैज्ञानिक आधार:" : "Agronomic Rationale:"}</strong>{" "}
+              {isHindi ? (
+                <>अगले ४८ घंटों में १४.५ मिमी वर्षा का अनुमान, जबकि जड़ क्षेत्र में पहले से ६८% नमी है। सिंचाई टालने से <strong className="text-amber-300">₹८५० ऊर्जा खर्च</strong> बचेगा और मृदा नाइट्रोजन का निक्षालन नहीं होगा।</>
+              ) : (
+                <>14.5 mm convective precipitation inbound over the next 48h while root-zone moisture is already at an optimal <strong className="text-sky-300">68% VWC</strong>. Deferring the solar/grid pumping cycle conserves <strong className="text-amber-300">₹850 in energy</strong> and prevents soil nitrogen leaching.</>
+              )}
             </p>
 
             {expanded && (
               <div className="mt-4 p-4 rounded-2xl bg-black/50 border border-white/10 text-xs space-y-2.5">
                 <div className="font-bold text-white flex items-center gap-2 font-display">
                   <Info className="w-4 h-4 text-rose-400" />
-                  <span>Decisional Parameter Contribution Matrix:</span>
+                  <span>{isHindi ? "निर्णय पैरामीटर योगदान मैट्रिक्स:" : "Decisional Parameter Contribution Matrix:"}</span>
                 </div>
                 {[
-                  { factor: "Rhizosphere Storage", val: "68% VWC (Optimal 55–75% band)", badge: "Safe Buffer", color: "#38BDF8" },
-                  { factor: "Forecast Rain Radar", val: "14.5mm rain expected in Day 2 window (35% prob)", badge: "Delay Cycle", color: "#818CF8" },
-                  { factor: "Crop Water Need (ETc)", val: "1.36 mm/day (Wheat tillering stage Kc = 0.85)", badge: "Low Demand", color: "#FB7185" },
-                  { factor: "Economic Return", val: "320 m³ water conserved • ₹850 tariff avoided", badge: "+Savings", color: "#FCD34D" }
+                  { factor: isHindi ? "जड़-क्षेत्र मृदा भंडारण" : "Rhizosphere Storage", val: isHindi ? "६८% VWC (आदर्श ५५–७५% दायरा)" : "68% VWC (Optimal 55–75% band)", badge: isHindi ? "सुरक्षित बफर" : "Safe Buffer", color: "#38BDF8" },
+                  { factor: isHindi ? "वर्षा पूर्वानुमान रडार" : "Forecast Rain Radar", val: isHindi ? "१४.५ मिमी वर्षा (दूसरे दिन ३५% संभावना)" : "14.5mm rain expected in Day 2 window (35% prob)", badge: isHindi ? "चक्र टालें" : "Delay Cycle", color: "#818CF8" },
+                  { factor: isHindi ? "फसल जल मांग (ETc)" : "Crop Water Need (ETc)", val: isHindi ? "१.३६ मिमी/दिन (गेहूं कल्ले फूटने की अवस्था)" : "1.36 mm/day (Wheat tillering stage Kc = 0.85)", badge: isHindi ? "कम मांग" : "Low Demand", color: "#FB7185" },
+                  { factor: isHindi ? "आर्थिक बचत" : "Economic Return", val: isHindi ? "३२० घनमीटर पानी सुरक्षित • ₹८५० बिजली बचत" : "320 m³ water conserved • ₹850 tariff avoided", badge: isHindi ? "+बचत" : "+Savings", color: "#FCD34D" }
                 ].map((item, i) => (
                   <div key={i} className="flex justify-between items-center py-1.5 border-b border-white/10 last:border-0">
                     <span className="text-slate-300 font-medium">{item.factor}:</span>
@@ -308,7 +319,9 @@ function AIBanner({ recommendation, smartIrrigation, onNavigate }) {
               onClick={() => setExpanded(!expanded)}
               className="text-xs font-bold text-rose-300 hover:text-rose-200 mt-2 flex items-center gap-1 cursor-pointer"
             >
-              {expanded ? "Hide Detailed Scientific Matrix ↑" : "Inspect Detailed Scientific Matrix →"}
+              {expanded
+                ? (isHindi ? "वैज्ञानिक मैट्रिक्स छुपाएं ↑" : "Hide Detailed Scientific Matrix ↑")
+                : (isHindi ? "विस्तृत वैज्ञानिक विश्लेषण देखें →" : "Inspect Detailed Scientific Matrix →")}
             </button>
           </div>
         </div>
@@ -319,14 +332,14 @@ function AIBanner({ recommendation, smartIrrigation, onNavigate }) {
             className="btn btn-primary text-xs py-2.5 px-4 shadow-lg flex items-center gap-2"
           >
             <Droplets className="w-4 h-4" />
-            <span>Open Irrigation Simulator</span>
+            <span>{isHindi ? "स्मार्ट सिंचाई खोलें" : "Open Irrigation Simulator"}</span>
           </button>
           <button
             onClick={() => onNavigate("cropIntelligence")}
             className="btn btn-secondary text-xs py-2 px-3 flex items-center gap-1.5"
           >
             <Sprout className="w-3.5 h-3.5 text-emerald-400" />
-            <span>AI Crop Advisor</span>
+            <span>{isHindi ? "फसल सलाहकार" : "AI Crop Advisor"}</span>
           </button>
         </div>
       </div>
@@ -335,11 +348,22 @@ function AIBanner({ recommendation, smartIrrigation, onNavigate }) {
 }
 
 /* ── IMPROVISED MULTI-COLORED INTERACTIVE GRAPHS SECTION ── */
-function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigate }) {
+function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigate, isHindi = false }) {
   const [graphTab, setGraphTab] = useState("weatherTrajectory"); // "weatherTrajectory" | "soilChemistry"
+  const num = (v) => (isHindi ? toHindiDigits(v) : String(v));
+
+  const dayMap = {
+    Mon: isHindi ? "सोम" : "Mon",
+    Tue: isHindi ? "मंगल" : "Tue",
+    Wed: isHindi ? "बुध" : "Wed",
+    Thu: isHindi ? "गुरु" : "Thu",
+    Fri: isHindi ? "शुक्र" : "Fri",
+    Sat: isHindi ? "शनि" : "Sat",
+    Sun: isHindi ? "रवि" : "Sun"
+  };
 
   // 7-day weather trend points
-  const forecastDays = weather?.forecast_days || [
+  const forecastDays = (weather?.forecast_days || [
     { day: "Mon", temp_max: 31, temp_min: 21, rain_prob: 5, condition: "Sunny" },
     { day: "Tue", temp_max: 30, temp_min: 20, rain_prob: 35, condition: "Rain Inbound" },
     { day: "Wed", temp_max: 29, temp_min: 19, rain_prob: 50, condition: "Showers" },
@@ -347,14 +371,18 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
     { day: "Fri", temp_max: 32, temp_min: 23, rain_prob: 10, condition: "Sunny" },
     { day: "Sat", temp_max: 30, temp_min: 21, rain_prob: 5, condition: "Clear" },
     { day: "Sun", temp_max: 29, temp_min: 20, rain_prob: 0, condition: "Sunny" }
-  ];
+  ]).map(d => ({
+    ...d,
+    dayLabel: dayMap[d.day] || d.day,
+    conditionLabel: localizeTerm(d.condition, isHindi)
+  }));
 
   // Soil Macronutrient data
   const nutrients = [
-    { name: "Nitrogen (N)", actual: 85, ideal: 100, unit: "kg/ha", theme: "sky", color: "#38BDF8", label: "Vegetative Growth" },
-    { name: "Phosphorus (P)", actual: 42, ideal: 50, unit: "kg/ha", theme: "gold", color: "#F59E0B", label: "Root Biomass" },
-    { name: "Potassium (K)", actual: 180, ideal: 200, unit: "kg/ha", theme: "pink", color: "#FB7185", label: "Disease Immunity" },
-    { name: "Soil pH", actual: 6.8, ideal: 7.0, unit: "pH", theme: "leaf", color: "#4ADE80", label: "Neutral Fertility" }
+    { name: isHindi ? "नाइट्रोजन (N)" : "Nitrogen (N)", actual: 85, ideal: 100, unit: isHindi ? "किग्रा/हे." : "kg/ha", theme: "sky", color: "#38BDF8", label: isHindi ? "वानस्पतिक विकास" : "Vegetative Growth" },
+    { name: isHindi ? "फास्फोरस (P)" : "Phosphorus (P)", actual: 42, ideal: 50, unit: isHindi ? "किग्रा/हे." : "kg/ha", theme: "gold", color: "#F59E0B", label: isHindi ? "जड़ बायोमास" : "Root Biomass" },
+    { name: isHindi ? "पोटाश (K)" : "Potassium (K)", actual: 180, ideal: 200, unit: isHindi ? "किग्रा/हे." : "kg/ha", theme: "pink", color: "#FB7185", label: isHindi ? "रोग प्रतिरोधकता" : "Disease Immunity" },
+    { name: isHindi ? "मृदा पीएच (pH)" : "Soil pH", actual: 6.8, ideal: 7.0, unit: "pH", theme: "leaf", color: "#4ADE80", label: isHindi ? "उर्वर संतुलन" : "Neutral Fertility" }
   ];
 
   return (
@@ -364,33 +392,33 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
         <div>
           <span className="section-eyebrow text-gold-neon flex items-center gap-1.5">
             <Activity className="w-4 h-4 text-amber-400" />
-            <span>Interactive Dynamic Visualizations & Telemetry Curves</span>
+            <span>{isHindi ? "इंटरएक्टिव गतिशील विज़ुअलाइज़ेशन एवं टेलीमेट्री वक्र" : "Interactive Dynamic Visualizations & Telemetry Curves"}</span>
           </span>
           <h2 className="text-xl sm:text-2xl font-extrabold text-white font-display tracking-tight mt-0.5">
-            Agro-Meteorological Trajectory & Soil Nutrient Chemistry
+            {isHindi ? "कृषि-मौसम प्रक्षेपवक्र एवं मृदा पोषक तत्व रसायन" : "Agro-Meteorological Trajectory & Soil Nutrient Chemistry"}
           </h2>
         </div>
 
         <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold">
           <button
             onClick={() => setGraphTab("weatherTrajectory")}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               graphTab === "weatherTrajectory"
                 ? "bg-sky-500 text-black shadow-md font-extrabold"
                 : "text-slate-300 hover:text-white"
             }`}
           >
-            🌦️ 7-Day Microclimate Graph
+            {isHindi ? "🌦️ ७-दिवसीय सूक्ष्म जलवायु ग्राफ" : "🌦️ 7-Day Microclimate Graph"}
           </button>
           <button
             onClick={() => setGraphTab("soilChemistry")}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               graphTab === "soilChemistry"
                 ? "bg-amber-400 text-black shadow-md font-extrabold"
                 : "text-slate-300 hover:text-white"
             }`}
           >
-            🧪 Soil NPK Chemistry
+            {isHindi ? "🧪 मृदा NPK रसायन" : "🧪 Soil NPK Chemistry"}
           </button>
         </div>
       </div>
@@ -405,10 +433,12 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
               </div>
               <div>
                 <h3 className="text-base font-extrabold text-white font-display">
-                  7-Day Thermal & Precipitation Curve (Open-Meteo NWP Radar)
+                  {isHindi ? "७-दिवसीय थर्मल एवं वर्षा वक्र (NWP मौसम रडार)" : "7-Day Thermal & Precipitation Curve (Open-Meteo NWP Radar)"}
                 </h3>
                 <p className="text-xs text-sky-200">
-                  Dual-parameter visualization: High/Low Temperatures (°C) vs Rainfall Probability (%)
+                  {isHindi
+                    ? "दोहरा मापदंड: अधिकतम/न्यूनतम तापमान (°C) बनाम वर्षा संभावना (%)"
+                    : "Dual-parameter visualization: High/Low Temperatures (°C) vs Rainfall Probability (%)"}
                 </p>
               </div>
             </div>
@@ -416,13 +446,13 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
             {/* Legend */}
             <div className="flex items-center gap-4 text-xs font-mono font-bold">
               <span className="flex items-center gap-1.5 text-amber-300">
-                <span className="w-3 h-3 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50" /> Max Temp (°C)
+                <span className="w-3 h-3 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50" /> {isHindi ? "अधिकतम तापमान (°C)" : "Max Temp (°C)"}
               </span>
               <span className="flex items-center gap-1.5 text-sky-300">
-                <span className="w-3 h-3 rounded-full bg-sky-400 shadow-sm shadow-sky-400/50" /> Min Temp (°C)
+                <span className="w-3 h-3 rounded-full bg-sky-400 shadow-sm shadow-sky-400/50" /> {isHindi ? "न्यूनतम तापमान (°C)" : "Min Temp (°C)"}
               </span>
               <span className="flex items-center gap-1.5 text-indigo-300">
-                <span className="w-3 h-3 rounded-sm bg-gradient-to-t from-indigo-600 to-sky-400" /> Rain Prob (%)
+                <span className="w-3 h-3 rounded-sm bg-gradient-to-t from-indigo-600 to-sky-400" /> {isHindi ? "बारिश संभावना (%)" : "Rain Prob (%)"}
               </span>
             </div>
           </div>
@@ -442,16 +472,16 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
                   }`}
                 >
                   <span className="text-xs font-bold text-white font-tech uppercase tracking-wider mb-2">
-                    {day.day}
+                    {day.dayLabel}
                   </span>
 
                   {/* Temperature Pill */}
                   <div className="text-center my-1">
                     <span className="text-sm font-extrabold font-mono text-amber-300 block">
-                      {day.temp_max}°C
+                      {num(day.temp_max)}°C
                     </span>
                     <span className="text-[11px] font-mono text-sky-300">
-                      {day.temp_min}°C
+                      {num(day.temp_min)}°C
                     </span>
                   </div>
 
@@ -464,7 +494,7 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
                       >
                         {day.rain_prob > 20 && (
                           <span className="absolute top-1 left-0 right-0 text-center text-[9px] font-mono font-extrabold text-black">
-                            {day.rain_prob}%
+                            {num(day.rain_prob)}%
                           </span>
                         )}
                       </div>
@@ -472,7 +502,7 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
                   </div>
 
                   <span className="text-[10px] text-slate-300 font-semibold text-center line-clamp-1">
-                    {day.condition}
+                    {day.conditionLabel}
                   </span>
                 </div>
               );
@@ -480,12 +510,12 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
           </div>
 
           <div className="flex items-center justify-between pt-2 text-xs text-sky-200 border-t border-white/10 font-mono">
-            <span>⚡ Inbound Rainfall Peak: Day 2–3 (14.5mm convective replenishment)</span>
+            <span>{isHindi ? "⚡ संभावित वर्षा का चरम: दिन २-३ (१४.५ मिमी प्राकृतिक जल पुनर्भरण)" : "⚡ Inbound Rainfall Peak: Day 2–3 (14.5mm convective replenishment)"}</span>
             <button
               onClick={() => onNavigate("weather")}
-              className="text-white hover:underline font-bold flex items-center gap-1"
+              className="text-white hover:underline font-bold flex items-center gap-1 cursor-pointer"
             >
-              <span>Explore Detailed Radar</span>
+              <span>{isHindi ? "विस्तृत रडार देखें" : "Explore Detailed Radar"}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -502,14 +532,14 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
               </div>
               <div>
                 <h3 className="text-base font-extrabold text-white font-display">
-                  Soil Chemistry Macronutrients (NPK + pH Balance)
+                  {isHindi ? "मृदा रसायन मुख्य पोषक तत्व (NPK + pH संतुलन)" : "Soil Chemistry Macronutrients (NPK + pH Balance)"}
                 </h3>
                 <p className="text-xs text-amber-200">
-                  Precision laboratory soil test metrics vs ICAR optimum vegetative thresholds
+                  {isHindi ? "इष्टतम फसल उत्पादन के लिए प्रयोगशाला मृदा परीक्षण बनाम ICAR मानक" : "Precision laboratory soil test metrics vs ICAR optimum vegetative thresholds"}
                 </p>
               </div>
             </div>
-            <span className="badge badge-gold text-xs">Fertile Loam Profile</span>
+            <span className="badge badge-gold text-xs">{isHindi ? "उर्वर दोमट मृदा प्रोफ़ाइल" : "Fertile Loam Profile"}</span>
           </div>
 
           {/* 4 Multi-Colored Nutrient Bars */}
@@ -527,9 +557,9 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
                     </div>
                     <div className="text-right font-mono">
                       <span className="text-sm font-extrabold" style={{ color: n.color }}>
-                        {n.actual} <span className="text-xs text-slate-400 font-normal">{n.unit}</span>
+                        {num(n.actual)} <span className="text-xs text-slate-400 font-normal">{n.unit}</span>
                       </span>
-                      <span className="text-[10px] text-slate-400 block">Target: {n.ideal} {n.unit}</span>
+                      <span className="text-[10px] text-slate-400 block">{isHindi ? "लक्ष्य: " : "Target: "}{num(n.ideal)} {n.unit}</span>
                     </div>
                   </div>
 
@@ -545,8 +575,8 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] font-mono text-slate-300">
-                    <span>Index: {pct}% of optimal</span>
-                    <span className="font-bold text-emerald-400">✓ In Safe Range</span>
+                    <span>{isHindi ? "सूचकांक: " : "Index: "}{num(pct)}% {isHindi ? "अनुकूल" : "of optimal"}</span>
+                    <span className="font-bold text-emerald-400">{isHindi ? "✓ सुरक्षित दायरे में" : "✓ In Safe Range"}</span>
                   </div>
                 </div>
               );
@@ -554,12 +584,12 @@ function DashboardGraphsSection({ weather, analytics, smartIrrigation, onNavigat
           </div>
 
           <div className="flex items-center justify-between pt-2 text-xs text-amber-200 border-t border-white/10 font-mono">
-            <span>🌾 Optimal NPK ratio balance (4:2:1 equivalent) for current wheat vegetative stage</span>
+            <span>{isHindi ? "🌾 वर्तमान गेहूं वानस्पतिक अवस्था के लिए आदर्श NPK अनुपात (४:२:१ समकक्ष)" : "🌾 Optimal NPK ratio balance (4:2:1 equivalent) for current wheat vegetative stage"}</span>
             <button
               onClick={() => onNavigate("cropIntelligence")}
-              className="text-white hover:underline font-bold flex items-center gap-1"
+              className="text-white hover:underline font-bold flex items-center gap-1 cursor-pointer"
             >
-              <span>View Crop Fertilizer Plan</span>
+              <span>{isHindi ? "फसल उर्वरक योजना देखें" : "View Crop Fertilizer Plan"}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -582,143 +612,151 @@ export default function Dashboard({
   onNavigate
 }) {
   const healthScore = analytics?.soil_health_score || 88;
+  const isHindi = Boolean(t?.liveTelemetry?.includes("सजीव"));
+  const num = (v) => (isHindi ? toHindiDigits(v) : String(v));
 
   // 6 Multi-Colored Distinct KPI Cards
   const kpis = [
     {
-      title: "Microclimate Temp",
+      title: isHindi ? "सूक्ष्म जलवायु तापमान" : "Microclimate Temp",
       value: weather?.temperature || 28.4,
       unit: "°C",
-      trend: "+1.2°C from dawn",
+      trend: isHindi ? "+१.२°C सूर्योदय से" : "+1.2°C from dawn",
       trendUp: null,
       icon: Thermometer,
-      explanation: "Within the 20–35°C optimal vegetative band. No active thermal stress.",
+      explanation: isHindi ? "२०-३५°C के आदर्श वानस्पतिक दायरे में। कोई थर्मल तनाव नहीं।" : "Within the 20–35°C optimal vegetative band. No active thermal stress.",
       cardTheme: "gold",
       color: "#FCD34D",
-      ringValue: undefined
+      ringValue: undefined,
+      isHindi
     },
     {
-      title: "7-Day Precipitation",
+      title: isHindi ? "७-दिवसीय वर्षा पूर्वानुमान" : "7-Day Precipitation",
       value: weather?.rainfall_forecast_7d || 14.5,
-      unit: "mm",
-      trend: "35% rain prob Day 2",
+      unit: isHindi ? "मिमी" : "mm",
+      trend: isHindi ? "दूसरे दिन ३५% बारिश संभावना" : "35% rain prob Day 2",
       trendUp: null,
       icon: CloudRain,
-      explanation: "Light convective showers forecast. Sufficient natural recharge.",
+      explanation: isHindi ? "हल्की फुहारों का पूर्वानुमान। पर्याप्त प्राकृतिक नमी।" : "Light convective showers forecast. Sufficient natural recharge.",
       cardTheme: "sky",
       color: "#38BDF8",
-      ringValue: undefined
+      ringValue: undefined,
+      isHindi
     },
     {
-      title: "Atmospheric Humidity",
+      title: isHindi ? "वायुमंडलीय आर्द्रता (नमी)" : "Atmospheric Humidity",
       value: weather?.humidity || 62,
       unit: "% RH",
-      trend: "−4% since morning",
+      trend: isHindi ? "सुबह से −४%" : "−4% since morning",
       trendUp: false,
       icon: Droplets,
-      explanation: "Below 70% fungal foliar hazard threshold. Safe for morning spraying.",
+      explanation: isHindi ? "७०% फफूंद जोखिम सीमा से नीचे। सुबह कीटनाशक छिड़काव सुरक्षित।" : "Below 70% fungal foliar hazard threshold. Safe for morning spraying.",
       cardTheme: "indigo",
       color: "#818CF8",
       ringValue: weather?.humidity || 62,
       ringMax: 100,
-      ringColor: "#818CF8"
+      ringColor: "#818CF8",
+      isHindi
     },
     {
-      title: "Root-Zone Moisture",
+      title: isHindi ? "जड़-क्षेत्र मृदा नमी" : "Root-Zone Moisture",
       value: smartIrrigation?.soil_moisture_pct || 68,
       unit: "% VWC",
-      trend: "Ideal Rhizosphere",
+      trend: isHindi ? "आदर्श राइजोस्फीयर" : "Ideal Rhizosphere",
       trendUp: true,
       icon: Layers,
-      explanation: "Root zone VWC in 55–75% safe buffer. Defer scheduled pumping.",
+      explanation: isHindi ? "मृदा नमी ५५-७५% के सुरक्षित दायरे में। आज सिंचाई स्थगित रखें।" : "Root zone VWC in 55–75% safe buffer. Defer scheduled pumping.",
       cardTheme: "leaf",
       color: "#4ADE80",
       ringValue: smartIrrigation?.soil_moisture_pct || 68,
       ringMax: 100,
-      ringColor: "#4ADE80"
+      ringColor: "#4ADE80",
+      isHindi
     },
     {
-      title: "Canopy Vigour Index",
+      title: isHindi ? "कैनोपी स्वास्थ्य (NDVI)" : "Canopy Vigour Index",
       value: analytics?.soil_health_score || 88,
-      unit: "/ 100",
-      trend: "+3 pts (Excellent)",
+      unit: isHindi ? "/ १००" : "/ 100",
+      trend: isHindi ? "+३ अंक (उत्कृष्ट)" : "+3 pts (Excellent)",
       trendUp: true,
       icon: Sprout,
-      explanation: "NDVI 0.78 — robust biomass cover and high chlorophyll reflectance.",
+      explanation: isHindi ? "NDVI ०.७८ — मजबूत बायोमास आवरण और स्वस्थ क्लोरोफिल स्तर।" : "NDVI 0.78 — robust biomass cover and high chlorophyll reflectance.",
       cardTheme: "gold",
       color: "#FBBF24",
       ringValue: analytics?.soil_health_score || 88,
       ringMax: 100,
-      ringColor: "#FBBF24"
+      ringColor: "#FBBF24",
+      isHindi
     },
     {
-      title: "Compound Pest Risk",
+      title: isHindi ? "संयुक्त कीट व रोग जोखिम" : "Compound Pest Risk",
       value: 18,
-      unit: "/ 100",
-      trend: "Low — Safe to cultivate",
+      unit: isHindi ? "/ १००" : "/ 100",
+      trend: isHindi ? "निम्न — खेती के लिए सुरक्षित" : "Low — Safe to cultivate",
       trendUp: null,
       icon: ShieldCheck,
-      explanation: "No active critical blight or rust vectors. Safe physiological growth.",
+      explanation: isHindi ? "फफूंद या कीट रोग का कोई खतरा नहीं। सुरक्षित शारीरिक विकास।" : "No active critical blight or rust vectors. Safe physiological growth.",
       cardTheme: "pink",
       color: "#FB7185",
       ringValue: 18,
       ringMax: 100,
-      ringColor: "#FB7185"
+      ringColor: "#FB7185",
+      isHindi
     }
   ];
 
   // 4 Multi-Colored Subsystem Module Tiles
   const moduleTiles = [
     {
-      title: "Smart Irrigation",
-      eyebrow: "HYDROLOGY COMMAND",
+      title: isHindi ? "स्मार्ट सिंचाई" : "Smart Irrigation",
+      eyebrow: isHindi ? "जल विज्ञान नियंत्रण" : "HYDROLOGY COMMAND",
       icon: Droplets,
       theme: "sky",
       target: "smartIrrigation",
       stats: [
-        { label: "Action", value: "HOLD (Rain Inbound)", valueColor: "#38BDF8" },
-        { label: "Root VWC", value: "68% (Optimal)", valueColor: "#4ADE80" },
-        { label: "Water Need", value: "1.36 mm/day", valueColor: "#FFFFFF" },
-        { label: "Cost Saved", value: "₹850 / 320 m³", valueColor: "#FCD34D" }
+        { label: isHindi ? "कार्रवाई" : "Action", value: isHindi ? "स्थगित रखें (वर्षा अनुमान)" : "HOLD (Rain Inbound)", valueColor: "#38BDF8" },
+        { label: isHindi ? "जड़ नमी" : "Root VWC", value: isHindi ? "६८% (आदर्श)" : "68% (Optimal)", valueColor: "#4ADE80" },
+        { label: isHindi ? "जल बचत" : "Water Saved", value: isHindi ? "३२० घनमीटर (३४%)" : "320 m³ (34%)", valueColor: "#38BDF8" },
+        { label: isHindi ? "दैनिक ET0" : "Daily ET0", value: isHindi ? "४.२ मिमी" : "4.2 mm", valueColor: "#FCD34D" }
       ]
     },
     {
-      title: "Weather Intelligence",
-      eyebrow: "NWP RADAR SUITE",
-      icon: CloudRain,
+      title: isHindi ? "मौसम बुद्धिमत्ता" : "Weather Intelligence",
+      eyebrow: isHindi ? "NWP पूर्वानुमान रडार" : "NWP RADAR FORECAST",
+      icon: Sun,
       theme: "indigo",
       target: "weather",
       stats: [
-        { label: "Wind Velocity", value: "9.8 km/h (Safe)", valueColor: "#4ADE80" },
-        { label: "ET₀ Evaporation", value: "4.2 mm/day", valueColor: "#A5B4FC" },
-        { label: "Atm. Pressure", value: "1012 hPa", valueColor: "#FFFFFF" },
-        { label: "Spray Window", value: "06:00 – 10:30 AM", valueColor: "#38BDF8" }
+        { label: isHindi ? "परिवेशी तापमान" : "Ambient Temp", value: `${num(weather?.temperature || 28.4)}°C`, valueColor: "#FCD34D" },
+        { label: isHindi ? "७-दिवसीय वर्षा" : "7-Day Precip", value: `${num(14.5)} mm`, valueColor: "#818CF8" },
+        { label: isHindi ? "छिड़काव सुरक्षा" : "Spray Window", value: isHindi ? "अनुकूल (सुबह ७-१०)" : "Optimal (07:00–10:00)", valueColor: "#4ADE80" },
+        { label: isHindi ? "हवा की गति" : "Wind Vector", value: `${num(9.8)} km/h NW`, valueColor: "#FFFFFF" }
       ]
     },
     {
-      title: "Pest & Disease Risk",
-      eyebrow: "PATHOGEN MONITOR",
+      title: isHindi ? "खेत जोखिम केंद्र" : "Farm Risk Center",
+      eyebrow: isHindi ? "मल्टी-वेक्टर मॉनिटर" : "MULTI-VECTOR MONITOR",
       icon: ShieldCheck,
       theme: "pink",
       target: "diseaseRisk",
       stats: [
-        { label: "Yellow Rust", value: "Low (Safe)", valueColor: "#4ADE80" },
-        { label: "Thermal Stress", value: "Mid-day Only", valueColor: "#FCD34D" },
-        { label: "Soil Hypoxia", value: "None (Aerate)", valueColor: "#4ADE80" },
-        { label: "Risk Score", value: "18 / 100 (Safe)", valueColor: "#FB7185" }
+        { label: isHindi ? "संयुक्त जोखिम" : "Compound Risk", value: isHindi ? "१८ / १०० (निम्न)" : "18 / 100 (Low)", valueColor: "#4ADE80" },
+        { label: isHindi ? "थर्मल तनाव" : "Thermal Stress", value: isHindi ? "सुरक्षित (२८°C)" : "Safe (28°C)", valueColor: "#4ADE80" },
+        { label: isHindi ? "फफूंद खतरा" : "Foliar Blight", value: isHindi ? "१२% (न्यूनतम)" : "12% (Minimal)", valueColor: "#4ADE80" },
+        { label: isHindi ? "७-दिवसीय दृष्टिकोण" : "7-Day Outlook", value: isHindi ? "अनुकूल" : "Favorable", valueColor: "#38BDF8" }
       ]
     },
     {
-      title: "AI Crop Advisor",
-      eyebrow: "AGRONOMY MODEL",
+      title: isHindi ? "AI फसल सलाहकार" : "AI Crop Advisor",
+      eyebrow: isHindi ? "मशीन लर्निंग मॉडल" : "AGRONOMY MODEL",
       icon: Sprout,
       theme: "gold",
       target: "cropIntelligence",
       stats: [
-        { label: "Top Recommendation", value: recommendation?.top_crop || "Wheat (PBW-343)", valueColor: "#FCD34D" },
-        { label: "Suitability Score", value: `${recommendation?.confidence || 94.8}%`, valueColor: "#4ADE80" },
-        { label: "Sowing Window", value: "Late Oct – Mid Nov", valueColor: "#FFFFFF" },
-        { label: "Yield Potential", value: "19–22 Q/Acre", valueColor: "#FCD34D" }
+        { label: isHindi ? "शीर्ष सिफ़ारिश" : "Top Recommendation", value: recommendation?.top_crop || (isHindi ? "गेहूं (PBW-343)" : "Wheat (PBW-343)"), valueColor: "#FCD34D" },
+        { label: isHindi ? "उपयुक्तता स्कोर" : "Suitability Score", value: `${num(recommendation?.confidence || 94.8)}%`, valueColor: "#4ADE80" },
+        { label: isHindi ? "बुवाई विंडो" : "Sowing Window", value: isHindi ? "अक्टूबर अंत – मध्य नवंबर" : "Late Oct – Mid Nov", valueColor: "#FFFFFF" },
+        { label: isHindi ? "संभावित उपज" : "Yield Potential", value: isHindi ? "१९–२२ कुंतल/एकड़" : "19–22 Q/Acre", valueColor: "#FCD34D" }
       ]
     }
   ];
@@ -733,7 +771,7 @@ export default function Dashboard({
             <div className="flex items-center gap-2 mb-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
               <span className="section-eyebrow text-emerald-300">
-                LIVE PRECISION SATELLITE & SENSOR TELEMETRY
+                {isHindi ? "सजीव उपग्रह एवं सेंसर टेलीमेट्री" : "LIVE PRECISION SATELLITE & SENSOR TELEMETRY"}
               </span>
             </div>
 
@@ -749,12 +787,12 @@ export default function Dashboard({
               <span className="flex items-center gap-1.5 text-slate-200 font-medium">
                 <Sprout className="w-4 h-4 text-emerald-400" />
                 <span>
-                  {farm?.current_crop || "Wheat"} ({farm?.crop_stage || "Vegetative / Tillering"}) • {farm?.area_acres || 5.0} Acres
+                  {localizeTerm(farm?.current_crop || "Wheat", isHindi)} ({localizeTerm(farm?.crop_stage || "Vegetative / Tillering", isHindi)}) • {num(farm?.area_acres || 5.0)} {isHindi ? "एकड़" : "Acres"}
                 </span>
               </span>
               <span className="flex items-center gap-1.5 text-amber-300 font-bold font-mono">
                 <Sun className="w-4 h-4 text-amber-400" />
-                <span>{weather?.temperature || 28.4}°C • Mainly Clear</span>
+                <span>{num(weather?.temperature || 28.4)}°C • {isHindi ? "साफ मौसम" : "Mainly Clear"}</span>
               </span>
             </div>
           </div>
@@ -765,11 +803,11 @@ export default function Dashboard({
               <div className="relative">
                 <RingProgress value={healthScore} size={68} strokeWidth={6} color="#4ADE80" />
                 <div className="absolute inset-0 flex items-center justify-center font-mono font-extrabold text-base text-emerald-300">
-                  {healthScore}
+                  {num(healthScore)}
                 </div>
               </div>
               <span className="text-[10px] font-tech uppercase tracking-widest text-slate-300 mt-1 font-bold">
-                Health Score
+                {isHindi ? "स्वास्थ्य स्कोर" : "Health Score"}
               </span>
             </div>
 
@@ -777,17 +815,17 @@ export default function Dashboard({
               <button
                 onClick={onRunAiAnalysis}
                 disabled={isAnalyzing}
-                className="btn btn-primary px-4 py-2 text-xs flex items-center justify-center gap-2 shadow-lg"
+                className="btn btn-primary px-4 py-2 text-xs flex items-center justify-center gap-2 shadow-lg cursor-pointer"
               >
                 <Cpu className={`w-4 h-4 ${isAnalyzing ? "animate-spin" : ""}`} />
-                <span>{isAnalyzing ? "Computing..." : "Run AI Analysis"}</span>
+                <span>{isAnalyzing ? (isHindi ? "गणना जारी..." : "Computing...") : (t?.dashboard?.runAiAnalysis || "Run AI Analysis")}</span>
               </button>
               <button
                 onClick={() => onNavigate("smartIrrigation")}
-                className="btn btn-secondary px-4 py-2 text-xs flex items-center justify-center gap-1.5"
+                className="btn btn-secondary px-4 py-2 text-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Droplets className="w-3.5 h-3.5 text-sky-400" />
-                <span>Smart Irrigation</span>
+                <span>{t?.tabs?.smartIrrigation || "Smart Irrigation"}</span>
               </button>
             </div>
           </div>
@@ -799,6 +837,7 @@ export default function Dashboard({
         recommendation={recommendation}
         smartIrrigation={smartIrrigation}
         onNavigate={onNavigate}
+        isHindi={isHindi}
       />
 
       {/* ── 6 DISTINCT MULTI-COLORED KPI CARDS ── */}
@@ -806,10 +845,10 @@ export default function Dashboard({
         <div className="flex items-center justify-between mb-3.5">
           <span className="section-eyebrow text-sky-light flex items-center gap-2">
             <Activity className="w-4 h-4 text-sky-400" />
-            <span>Hyperlocal Meteorological & Rhizosphere Telemetry</span>
+            <span>{isHindi ? "अति-स्थानीय मौसम व राइजोस्फीयर टेलीमेट्री" : "Hyperlocal Meteorological & Rhizosphere Telemetry"}</span>
           </span>
           <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Live Telemetry Feed
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> {isHindi ? "सजीव टेलीमेट्री फीड" : "Live Telemetry Feed"}
           </span>
         </div>
 
@@ -826,6 +865,7 @@ export default function Dashboard({
         analytics={analytics}
         smartIrrigation={smartIrrigation}
         onNavigate={onNavigate}
+        isHindi={isHindi}
       />
 
       {/* ── SOIL MOISTURE HYDROLOGY STRIP PREVIEW (LIGHT BLUE TO INDIGO GRADIENT) ── */}
@@ -837,12 +877,14 @@ export default function Dashboard({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm sm:text-base font-extrabold text-white font-display">
-                Root-Zone Soil Moisture Storage: 68% VWC
+                {isHindi ? "जड़-क्षेत्र मृदा नमी भंडारण: ६८% VWC" : "Root-Zone Soil Moisture Storage: 68% VWC"}
               </h3>
-              <span className="badge badge-sky text-xs">Safe Moisture Band</span>
+              <span className="badge badge-sky text-xs">{isHindi ? "सुरक्षित नमी दायरा" : "Safe Moisture Band"}</span>
             </div>
             <p className="text-xs text-sky-200 mt-0.5">
-              Refill threshold is 55% VWC. Available moisture sustains wheat root-zone transpiration for the next 72 hours.
+              {isHindi
+                ? "पुनः भरण सीमा ५५% VWC है। उपलब्ध नमी अगले ७२ घंटों तक फसल वाष्पोत्सर्जन के लिए पर्याप्त है।"
+                : "Refill threshold is 55% VWC. Available moisture sustains wheat root-zone transpiration for the next 72 hours."}
             </p>
           </div>
         </div>
@@ -858,7 +900,7 @@ export default function Dashboard({
             onClick={() => onNavigate("smartIrrigation")}
             className="btn btn-primary text-xs py-2 px-3.5 flex items-center gap-1.5 shadow"
           >
-            <span>Open Simulator</span>
+            <span>{isHindi ? "सिम्युलेटर खोलें" : "Open Simulator"}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -867,12 +909,12 @@ export default function Dashboard({
       {/* ── 4 MULTI-COLORED MODULE QUICK-ACCESS TILES ── */}
       <div>
         <div className="flex items-center justify-between mb-3.5">
-          <span className="section-eyebrow text-gold-neon">Agricultural Subsystem Commands</span>
-          <span className="text-xs text-slate-300">Direct Navigation</span>
+          <span className="section-eyebrow text-gold-neon">{isHindi ? "कृषि उपप्रणाली कमांड" : "Agricultural Subsystem Commands"}</span>
+          <span className="text-xs text-slate-300">{isHindi ? "सीधा नेविगेशन" : "Direct Navigation"}</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {moduleTiles.map((tile) => (
-            <ModuleTile key={tile.title} {...tile} onNavigate={onNavigate} />
+            <ModuleTile key={tile.title} {...tile} isHindi={isHindi} onNavigate={onNavigate} />
           ))}
         </div>
       </div>

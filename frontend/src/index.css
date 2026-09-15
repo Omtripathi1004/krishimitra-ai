@@ -604,6 +604,13 @@ body::before {
   z-index: 40;
 }
 
+@media (max-width: 640px) {
+  .command-header {
+    padding: 0 0.5rem;
+    gap: 0.35rem;
+  }
+}
+
 /* ── MAIN CONTENT AREA ── */
 .command-content {
   flex: 1;

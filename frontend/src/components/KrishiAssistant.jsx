@@ -5,6 +5,7 @@ import {
   RotateCcw, Clock, X
 } from "lucide-react";
 import { API_BASE } from "../config";
+import { toHindiDigits, localizeTerm } from "../translations";
 
 const SUGGESTIONS = [
   { en: "Which crop should I plant this season?", hi: "इस मौसम में कौन सी फसल बोनी चाहिए?" },
@@ -24,7 +25,7 @@ function TypingIndicator() {
   );
 }
 
-function MessageBubble({ msg, language }) {
+function MessageBubble({ msg, isHindi }) {
   const isBot = msg.role === "assistant";
 
   return (
@@ -58,21 +59,36 @@ function MessageBubble({ msg, language }) {
                 <div className="flex items-start gap-2 p-2 rounded-lg text-[11px]"
                      style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.18)", color: "var(--text-300)" }}>
                   <Droplets className="w-3 h-3 mt-0.5 shrink-0" style={{ color: "var(--sky)" }} />
-                  <span><strong className="font-semibold" style={{ color: "var(--sky)" }}>Telemetry:</strong> {msg.telemetry}</span>
+                  <span>
+                    <strong className="font-semibold" style={{ color: "var(--sky)" }}>
+                      {isHindi ? "टेलीमेट्री:" : "Telemetry:"}
+                    </strong>{" "}
+                    {msg.telemetry}
+                  </span>
                 </div>
               )}
               {msg.recommendation && (
                 <div className="flex items-start gap-2 p-2 rounded-lg text-[11px]"
                      style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.20)", color: "var(--text-300)" }}>
                   <CheckCircle2 className="w-3 h-3 mt-0.5 shrink-0" style={{ color: "var(--leaf)" }} />
-                  <span><strong className="font-semibold" style={{ color: "var(--leaf)" }}>Action:</strong> {msg.recommendation}</span>
+                  <span>
+                    <strong className="font-semibold" style={{ color: "var(--leaf)" }}>
+                      {isHindi ? "कार्रवाई:" : "Action:"}
+                    </strong>{" "}
+                    {msg.recommendation}
+                  </span>
                 </div>
               )}
               {msg.warning && (
                 <div className="flex items-start gap-2 p-2 rounded-lg text-[11px]"
                      style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.20)", color: "var(--text-300)" }}>
                   <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" style={{ color: "var(--amber)" }} />
-                  <span><strong className="font-semibold" style={{ color: "var(--amber)" }}>Alert:</strong> {msg.warning}</span>
+                  <span>
+                    <strong className="font-semibold" style={{ color: "var(--amber)" }}>
+                      {isHindi ? "चेतावनी:" : "Alert:"}
+                    </strong>{" "}
+                    {msg.warning}
+                  </span>
                 </div>
               )}
             </div>
@@ -89,24 +105,31 @@ function MessageBubble({ msg, language }) {
 
         {/* Timestamp */}
         <div className={`text-[9px] ml-1 ${isBot ? "" : "text-right mr-1"}`} style={{ color: "var(--text-500)" }}>
-          {msg.time || "Just now"}
+          {msg.time || (isHindi ? "अभी-अभी" : "Just now")}
         </div>
       </div>
     </div>
   );
 }
 
-export default function KrishiAssistant({ farm, weather, language, t }) {
+export default function KrishiAssistant({ farm, weather, language, isHindi: propIsHindi, t }) {
+  const isHindi = propIsHindi || language === "hi" || Boolean(t?.liveTelemetry?.includes("सजीव"));
+  const num = (v) => (isHindi ? toHindiDigits(v) : String(v));
+
   const [messages, setMessages] = useState([
     {
       role: "assistant",
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      text: language === "hi"
-        ? `नमस्ते! मैं आपका कृषि-मित्र AI कोपायलट हूँ। मुझे आपके खेत (${farm?.farm_name || "किसान आदर्श फार्म"}, फसल: ${farm?.current_crop || "गेहूं"}) की स्थिति की पूरी जानकारी है।`
+      text: isHindi
+        ? `नमस्ते! मैं आपका KrishiMitra AI कृषि सलाहकार हूँ। मुझे आपके खेत (${farm?.farm_name || "किसान आदर्श फार्म"}, फसल: ${localizeTerm(farm?.current_crop || "Wheat", true)}) की स्थिति की पूरी जानकारी है। मैं सिंचाई, फसल चयन, कीट नियंत्रण और सरकारी योजनाओं में आपकी सहायता कर सकता हूँ।`
         : `Hello! I'm your KrishiMitra AI Agricultural Copilot. I have full context of your farm (${farm?.farm_name || "Kisan Adarsh Farm"}, crop: ${farm?.current_crop || "Wheat"}, location: ${farm?.location_name || "Varanasi, UP"}). I can help with irrigation timing, crop selection, pest management, government schemes, and more.`,
-      telemetry: `Temp ${weather?.temperature || 28.4}°C · Humidity ${weather?.humidity || 62}% · Soil Moisture 68% VWC`,
-      recommendation: "Use the suggestion chips below for the most common farm queries.",
-      source: "ICAR Agronomy Guidelines & Open-Meteo NWP Model"
+      telemetry: isHindi
+        ? `तापमान ${num(weather?.temperature || 28.4)}°C · आर्द्रता ${num(weather?.humidity || 62)}% · मृदा नमी ${num(68)}% VWC`
+        : `Temp ${weather?.temperature || 28.4}°C · Humidity ${weather?.humidity || 62}% · Soil Moisture 68% VWC`,
+      recommendation: isHindi
+        ? "सामान्य कृषि प्रश्नों के लिए नीचे दिए गए सुझाव बटनों पर क्लिक करें।"
+        : "Use the suggestion chips below for the most common farm queries.",
+      source: isHindi ? "ICAR कृषि विज्ञान दिशानिर्देश एवं Open-Meteo NWP मॉडल" : "ICAR Agronomy Guidelines & Open-Meteo NWP Model"
     }
   ]);
   const [inputQuery, setInputQuery] = useState("");
@@ -133,7 +156,7 @@ export default function KrishiAssistant({ farm, weather, language, t }) {
       const res = await fetch(`${API_BASE}/assistant/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: textToSend, language })
+        body: JSON.stringify({ message: textToSend, language: isHindi ? "hi" : "en" })
       });
 
       if (res.ok) {
@@ -153,38 +176,52 @@ export default function KrishiAssistant({ farm, weather, language, t }) {
       const lower = textToSend.toLowerCase();
       let replyText, telemetryInfo, recInfo, warnInfo;
 
-      telemetryInfo = `Temp ${weather?.temperature || 28}°C · RH ${weather?.humidity || 60}% · Soil Moisture 68% VWC`;
+      telemetryInfo = isHindi
+        ? `तापमान ${num(weather?.temperature || 28)}°C · आर्द्रता ${num(weather?.humidity || 60)}% · मृदा नमी ${num(68)}% VWC`
+        : `Temp ${weather?.temperature || 28}°C · RH ${weather?.humidity || 60}% · Soil Moisture 68% VWC`;
 
-      if (lower.includes("irrigate") || lower.includes("सिंचाई") || lower.includes("water")) {
-        replyText = language === "hi"
-          ? "आपके खेत में अभी 68% मिट्टी नमी है और अगले 36 घंटों में 14.5mm बारिश का पूर्वानुमान है। सिंचाई को 24 घंटे स्थगित करना उचित है।"
+      if (lower.includes("irrigate") || lower.includes("सिंचाई") || lower.includes("water") || lower.includes("पानी")) {
+        replyText = isHindi
+          ? "आपके खेत में अभी ६८% मिट्टी नमी है और अगले ३६ घंटों में १४.५ मिमी बारिश का पूर्वानुमान है। सिंचाई को २४-३६ घंटे स्थगित करना उचित है जिससे जड़ों में वायु संचार बना रहे।"
           : "Based on real-time soil moisture (68% VWC) and the 14.5mm rainfall forecast for the next 36 hours, irrigation should be deferred by 24 hours to prevent root hypoxia and nutrient runoff.";
-        recInfo = "Hold drip cycle. Inspect soil moisture probe again at 06:00 AM tomorrow.";
-        warnInfo = "Over-irrigation at this moisture level risks nitrogen leaching below root zone.";
+        recInfo = isHindi
+          ? "ड्रिप सिंचाई रोकें। कल सुबह ६:०० बजे मिट्टी की नमी की पुनः जांच करें।"
+          : "Hold drip cycle. Inspect soil moisture probe again at 06:00 AM tomorrow.";
+        warnInfo = isHindi
+          ? "इस नमी स्तर पर अतिरिक्त सिंचाई से नाइट्रोजन बहने का खतरा है।"
+          : "Over-irrigation at this moisture level risks nitrogen leaching below root zone.";
 
-      } else if (lower.includes("crop") || lower.includes("plant") || lower.includes("फसल") || lower.includes("sow")) {
-        replyText = language === "hi"
-          ? "आपकी जलोढ़ मिट्टी (pH 6.8) और मौसम के आधार पर गेहूं (HD-2967) और सरसों (पूसा बोल्ड) सबसे उपयुक्त हैं — 94.8% और 88.4% अनुकूलता स्कोर के साथ।"
+      } else if (lower.includes("crop") || lower.includes("plant") || lower.includes("फसल") || lower.includes("sow") || lower.includes("बोनी")) {
+        replyText = isHindi
+          ? "आपकी जलोढ़ दोमट मिट्टी (pH ६.८) और रबी मौसम के आधार पर गेहूं (HD-2967) और सरसों (पूसा बोल्ड) सबसे उपयुक्त हैं — ९४.८% और ८८.४% अनुकूलता स्कोर के साथ।"
           : "For your Alluvial Loam soil (pH 6.8) and current Rabi season, Wheat (HD-2967) scores 94.8% suitability and Mustard (Pusa Bold) scores 88.4%. Both have guaranteed Government MSP procurement.";
-        recInfo = "Target sowing window: Late October to 15 November for best yield outcomes.";
+        recInfo = isHindi
+          ? "अनुकूल बुवाई अवधि: अधिकतम पैदावार के लिए २५ अक्टूबर से १५ नवंबर तक।"
+          : "Target sowing window: Late October to 15 November for best yield outcomes.";
 
       } else if (lower.includes("rain") || lower.includes("बारिश") || lower.includes("weather") || lower.includes("मौसम")) {
-        replyText = language === "hi"
-          ? "7 दिनों की NWP मॉडल रिपोर्ट: दिन 2 पर 35% संभावना के साथ 14.5mm हल्की बारिश। कोई बाढ़ या अत्यधिक जल भराव का खतरा नहीं।"
+        replyText = isHindi
+          ? "७ दिनों की संख्यात्मक मौसम रिपोर्ट: दूसरे दिन ३५% संभावना के साथ १४.५ मिमी हल्की वर्षा। जलभराव का कोई खतरा नहीं है।"
           : "7-day NWP forecast shows 14.5mm cumulative light rain on Day 2 with 35% probability. No severe flood or waterlogging hazard. Wind stays below 15 km/h — safe for morning spray operations.";
-        recInfo = "Complete foliar micronutrient spray before rain window arrives (ideally 06:00 – 10:30 AM today).";
+        recInfo = isHindi
+          ? "बारिश से पहले पर्ण पोषक स्प्रे पूर्ण कर लें (आज सुबह ०६:०० से १०:०० बजे)।"
+          : "Complete foliar micronutrient spray before rain window arrives (ideally 06:00 – 10:30 AM today).";
 
-      } else if (lower.includes("risk") || lower.includes("disease") || lower.includes("pest") || lower.includes("जोखिम")) {
-        replyText = language === "hi"
-          ? "आपके खेत का समग्र जोखिम स्कोर 18/100 (सुरक्षित) है। नमी 65% से कम होने से पीत रतुआ का खतरा न्यूनतम है।"
+      } else if (lower.includes("risk") || lower.includes("disease") || lower.includes("pest") || lower.includes("जोखिम") || lower.includes("कीट")) {
+        replyText = isHindi
+          ? "आपके खेत का समग्र जोखिम स्कोर १८/१०० (सुरक्षित) है। आर्द्रता नियंत्रित रहने से पीला रतुआ का खतरा न्यूनतम है।"
           : "Your compound farm risk score is currently 18/100 (Low — Safe). Relative humidity below 65% keeps yellow rust vector risk minimal. No active flood or thermal crop shock alerts.";
-        warnInfo = "Conduct scout walk along northern furrow boundary; inspect lower leaf canopy for early fungal signs.";
+        warnInfo = isHindi
+          ? "खेत के उत्तरी सिरे पर निगरानी रखें और निचली पत्तियों पर फफूंद के लक्षणों की जांच करें।"
+          : "Conduct scout walk along northern furrow boundary; inspect lower leaf canopy for early fungal signs.";
 
       } else {
-        replyText = language === "hi"
-          ? "इस सप्ताह प्राथमिकता सूची:\n1. जिंक + फेरस पर्ण स्प्रे — सुबह 6-10 बजे करें\n2. बारिश से पहले सिंचाई स्थगित रखें\n3. पीएम-किसान ई-केवाईसी सत्यापन पूरा करें\n4. रबी फसल के लिए बीज प्रमाणीकरण की व्यवस्था करें।"
+        replyText = isHindi
+          ? "इस सप्ताह की प्राथमिकता सूची:\n१. जिंक + फेरस पर्ण स्प्रे — सुबह ६-१० बजे के बीच करें\n२. बारिश से पहले सिंचाई स्थगित रखें\n३. पीएम-किसान ई-केवाईसी सत्यापन पूरा करें\n४. रबी फसल के लिए प्रमाणित बीजों की व्यवस्था करें।"
           : "Priority action list for this week:\n1. Foliar micronutrient spray (Zinc + Ferrous) — morning hours before 10:30 AM\n2. Defer irrigation until rain front clears (36h)\n3. Complete PM-KISAN e-KYC verification\n4. Procure certified Wheat seed before mid-November sowing window.";
-        recInfo = "Check Farm Planner tab for scheduled task reminders.";
+        recInfo = isHindi
+          ? "निर्धारित कार्यों के लिए कृषि योजनाकार (Work Planner) टैब देखें।"
+          : "Check Farm Planner tab for scheduled task reminders.";
       }
 
       setMessages([...updatedMessages, {
@@ -194,7 +231,7 @@ export default function KrishiAssistant({ farm, weather, language, t }) {
         telemetry: telemetryInfo,
         recommendation: recInfo,
         warning: warnInfo,
-        source: "KrishiMitra Agronomic Core · ICAR / IMD Knowledge Base"
+        source: isHindi ? "KrishiMitra कृषि कोर · ICAR / IMD ज्ञान भंडार" : "KrishiMitra Agronomic Core · ICAR / IMD Knowledge Base"
       }]);
     } finally {
       setIsLoading(false);
@@ -215,12 +252,16 @@ export default function KrishiAssistant({ farm, weather, language, t }) {
             <div>
               <div className="flex items-center gap-2 mb-0.5">
                 <h1 className="text-lg font-bold" style={{ fontFamily: "var(--font-display)", color: "var(--text-100)" }}>
-                  Krishi Copilot
+                  {isHindi ? "कृषि Copilot AI सहायक" : "Krishi Copilot"}
                 </h1>
-                <span className="badge badge-leaf text-[10px]">● Context-Aware</span>
+                <span className="badge badge-leaf text-[10px]">
+                  {isHindi ? "● संदर्भ-जागरूक" : "● Context-Aware"}
+                </span>
               </div>
               <p className="text-xs" style={{ color: "var(--text-300)" }}>
-                Bilingual AI for irrigation, crop selection, pest management & government schemes.
+                {isHindi
+                  ? "सिंचाई, फसल चयन, कीट प्रबंधन और सरकारी योजनाओं के लिए द्विभाषी विशेषज्ञ AI।"
+                  : "Bilingual AI for irrigation, crop selection, pest management & government schemes."}
               </p>
             </div>
           </div>
@@ -228,9 +269,13 @@ export default function KrishiAssistant({ farm, weather, language, t }) {
             <div className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg"
                  style={{ background: "var(--bg-input)", border: "1px solid var(--border-2)", color: "var(--text-300)" }}>
               <BookOpen className="w-3.5 h-3.5" style={{ color: "var(--leaf)" }} />
-              ICAR · KVK · IMD Verified
+              {isHindi ? "ICAR · KVK · IMD प्रमाणित" : "ICAR · KVK · IMD Verified"}
             </div>
-            <button onClick={clearChat} className="btn btn-ghost btn-icon" title="Clear conversation">
+            <button
+              onClick={clearChat}
+              className="btn btn-ghost btn-icon"
+              title={isHindi ? "बातचीत साफ़ करें" : "Clear conversation"}
+            >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -241,15 +286,17 @@ export default function KrishiAssistant({ farm, weather, language, t }) {
           className="mt-3 p-2.5 rounded-lg flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]"
           style={{ background: "rgba(34,197,94,0.06)", border: "1px solid rgba(34,197,94,0.15)" }}
         >
-          <span style={{ color: "var(--text-400)" }}>Context:</span>
+          <span style={{ color: "var(--text-400)" }}>{isHindi ? "संदर्भ:" : "Context:"}</span>
           <span style={{ color: "var(--text-200)" }}>
-            <strong style={{ color: "var(--leaf)" }}>Farm:</strong> {farm?.farm_name || "Kisan Adarsh Farm"}
+            <strong style={{ color: "var(--leaf)" }}>{isHindi ? "खेत:" : "Farm:"}</strong> {farm?.farm_name || (isHindi ? "किसान आदर्श फार्म" : "Kisan Adarsh Farm")}
           </span>
           <span style={{ color: "var(--text-200)" }}>
-            <strong style={{ color: "var(--leaf)" }}>Crop:</strong> {farm?.current_crop || "Wheat (HD-2967)"} · {farm?.crop_stage || "Vegetative"}
+            <strong style={{ color: "var(--leaf)" }}>{isHindi ? "फसल:" : "Crop:"}</strong>{" "}
+            {localizeTerm(farm?.current_crop || "Wheat", isHindi)} · {localizeTerm(farm?.crop_stage || "Vegetative", isHindi)}
           </span>
           <span style={{ color: "var(--text-200)" }}>
-            <strong style={{ color: "var(--leaf)" }}>Weather:</strong> {weather?.temperature || 28}°C · {weather?.humidity || 62}% RH
+            <strong style={{ color: "var(--leaf)" }}>{isHindi ? "मौसम:" : "Weather:"}</strong>{" "}
+            {num(weather?.temperature || 28)}°C · {num(weather?.humidity || 62)}% {isHindi ? "आर्द्रता" : "RH"}
           </span>
         </div>
       </div>
@@ -258,7 +305,7 @@ export default function KrishiAssistant({ farm, weather, language, t }) {
       <div className="card flex flex-col" style={{ height: 520 }}>
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-          {messages.map((msg, i) => <MessageBubble key={i} msg={msg} language={language} />)}
+          {messages.map((msg, i) => <MessageBubble key={i} msg={msg} isHindi={isHindi} />)}
           {isLoading && (
             <div className="flex items-start gap-2.5 anim-fade-in">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border"
@@ -279,9 +326,11 @@ export default function KrishiAssistant({ farm, weather, language, t }) {
           style={{ borderColor: "var(--border-2)" }}
         >
           <HelpCircle className="w-3 h-3 shrink-0" style={{ color: "var(--text-400)" }} />
-          <span className="text-[10px] uppercase font-bold tracking-wider shrink-0 mr-1" style={{ color: "var(--text-400)" }}>Quick:</span>
+          <span className="text-[10px] uppercase font-bold tracking-wider shrink-0 mr-1" style={{ color: "var(--text-400)" }}>
+            {isHindi ? "त्वरित प्रश्न:" : "Quick:"}
+          </span>
           {SUGGESTIONS.map((s, i) => {
-            const text = language === "hi" ? s.hi : s.en;
+            const text = isHindi ? s.hi : s.en;
             return (
               <button
                 key={i}
@@ -319,8 +368,8 @@ export default function KrishiAssistant({ farm, weather, language, t }) {
             type="text"
             value={inputQuery}
             onChange={e => setInputQuery(e.target.value)}
-            placeholder={language === "hi"
-              ? "फसल, सिंचाई, कीट या सरकारी योजनाओं के बारे में पूछें..."
+            placeholder={isHindi
+              ? "फसल, सिंचाई, कीट, खाद या सरकारी योजनाओं के बारे में पूछें..."
               : "Ask about irrigation, crops, pests, spray timing, or government schemes..."}
             className="input-field flex-1 py-2.5"
             disabled={isLoading}
@@ -331,7 +380,7 @@ export default function KrishiAssistant({ farm, weather, language, t }) {
             className="btn btn-primary py-2.5 px-4 text-xs shrink-0"
           >
             <Send className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Send</span>
+            <span className="hidden sm:inline">{isHindi ? "पूछें" : "Send"}</span>
           </button>
         </form>
       </div>

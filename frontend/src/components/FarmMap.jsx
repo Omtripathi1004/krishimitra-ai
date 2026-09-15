@@ -21,8 +21,12 @@ import {
   Sparkles
 } from "lucide-react";
 import { INDIA_STATES_DATA, findNearestIndianDistrict } from "../data/indiaLocations";
+import { toHindiDigits, localizeTerm } from "../translations";
 
-export default function FarmMap({ farm, onUpdateCoordinates, t }) {
+export default function FarmMap({ farm, onUpdateCoordinates, t, language, isHindi: propIsHindi }) {
+  const isHindi = propIsHindi || language === "hi" || Boolean(t?.liveTelemetry?.includes("सजीव"));
+  const num = (v) => (isHindi ? toHindiDigits(v) : String(v));
+
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
@@ -35,9 +39,8 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
     lon: farm?.longitude || 75.8573
   });
 
-  // State & District Selection Dropdowns (NovaVarsha AI Style)
+  // State & District Selection Dropdowns
   const [selectedState, setSelectedState] = useState(() => {
-    // Try to guess from farm location_name
     const loc = farm?.location_name || "";
     const matchedState = INDIA_STATES_DATA.find((s) => loc.includes(s.state));
     return matchedState ? matchedState.state : "Punjab";
@@ -52,7 +55,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
     return matchedDistrict ? matchedDistrict.name : currentDistricts[0]?.name || "Ludhiana";
   });
 
-  const [activeBaseLayer, setActiveBaseLayer] = useState("satellite"); // "satellite" | "osm" | "topo"
+  const [activeBaseLayer, setActiveBaseLayer] = useState("satellite");
   const [showBoundary, setShowBoundary] = useState(true);
   const [showNdvi, setShowNdvi] = useState(true);
   const [showSoilOverlay, setShowSoilOverlay] = useState(false);
@@ -119,108 +122,71 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
-      // 1. Create Leaflet map instance
       const map = L.map(mapContainerRef.current, {
         center: [coords.lat, coords.lon],
         zoom: 14,
-        zoomControl: false
+        zoomControl: false,
+        attributionControl: false
       });
 
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
-      // Base layers definition
+      // Base Layers
       const satellite = L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        {
-          attribution: "Esri, Maxar, Earthstar Geographics",
-          maxZoom: 18
-        }
+        { maxZoom: 19 }
       );
-
-      const osm = L.tileLayer(
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          maxZoom: 19
-        }
-      );
-
       const topo = L.tileLayer(
         "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
-        {
-          attribution: "Map data: &copy; OpenStreetMap, SRTM | Map style: &copy; OpenTopoMap (CC-BY-SA)",
-          maxZoom: 17
-        }
+        { maxZoom: 17 }
+      );
+      const osm = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        { maxZoom: 19 }
       );
 
-      layersRef.current = { satellite, osm, topo };
+      satellite.addTo(map);
+      layersRef.current = { satellite, topo, osm };
 
-      if (activeBaseLayer === "satellite") satellite.addTo(map);
-      else if (activeBaseLayer === "osm") osm.addTo(map);
-      else topo.addTo(map);
-
-      // High-Contrast Animated Current Location Pointer Marker
-      const pointerIcon = L.divIcon({
-        className: "current-location-marker",
-        html: `
-          <div class="current-location-radar"></div>
-          <div class="current-location-radar-2"></div>
-          <div class="current-location-pin" title="Current Farm Pointer (Drag to relocate)">
-            <span class="current-location-icon">🌾</span>
+      // Custom pulsing emerald farmer marker
+      const pinHtml = `
+        <div style="position:relative; width:36px; height:36px; display:flex; align-items:center; justify-content:center;">
+          <div style="position:absolute; width:36px; height:36px; border-radius:50%; background:rgba(34,197,94,0.35); animation: ping 1.8s cubic-bezier(0,0,0.2,1) infinite;"></div>
+          <div style="position:relative; width:22px; height:22px; border-radius:50%; background:#22C55E; border:3px solid #FFFFFF; box-shadow:0 0 12px rgba(34,197,94,0.8); display:flex; align-items:center; justify-content:center;">
+            <div style="width:6px; height:6px; border-radius:50%; background:#FFFFFF;"></div>
           </div>
-        `,
-        iconSize: [40, 40],
-        iconAnchor: [20, 36],
-        popupAnchor: [0, -36]
+        </div>
+      `;
+
+      const customIcon = L.divIcon({
+        html: pinHtml,
+        className: "custom-farm-pin",
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
       });
 
       const marker = L.marker([coords.lat, coords.lon], {
-        draggable: true,
-        icon: pointerIcon
+        icon: customIcon,
+        draggable: true
       }).addTo(map);
 
-      marker.bindPopup(`
-        <div style="font-family: sans-serif; min-width: 200px; padding: 6px;">
-          <div style="font-weight: 800; font-size: 14px; color: #0f172a; display: flex; align-items: center; gap: 4px;">
-            <span>📍 Current Farm Pointer</span>
-          </div>
-          <div style="font-size: 12px; color: #15803d; font-weight: 700; margin-top: 2px;">
-            ${farm?.location_name || `${selectedDistrict}, ${selectedState}`}
-          </div>
-          <div style="margin-top: 6px; font-size: 11px; font-family: monospace; color: #475569;">
-            Lat: ${coords.lat.toFixed(4)}°N • Lon: ${coords.lon.toFixed(4)}°E
-          </div>
-          <div style="margin-top: 4px; font-size: 11px; color: #0284c7; font-weight: 600;">
-            Area: ${farm?.area_acres || 5.0} Acres • Soil: ${farm?.soil_type || "Alluvial"}
-          </div>
-          <div style="margin-top: 6px; font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 4px;">
-            Tip: Drag pointer or click map to relocate parcel
-          </div>
-        </div>
-      `);
-
       marker.on("dragend", (e) => {
-        const { lat, lng } = e.target.getLatLng();
-        const nearest = findNearestIndianDistrict(lat, lng);
-        setCoords({ lat, lon: lng });
-        setSelectedState(nearest.state);
-        setSelectedDistrict(nearest.name);
-        const resolvedName = `${nearest.name}, ${nearest.state}, India`;
+        const p = e.target.getLatLng();
+        setCoords({ lat: p.lat, lon: p.lng });
         if (onUpdateCoordinates) {
-          onUpdateCoordinates(lat, lng, resolvedName, nearest.soil);
+          onUpdateCoordinates(p.lat, p.lng, `GPS Pin (${p.lat.toFixed(4)}, ${p.lng.toFixed(4)})`, farm?.soil_type);
         }
       });
 
+      markerRef.current = marker;
+
+      // Click to place marker
       map.on("click", (e) => {
         const { lat, lng } = e.latlng;
-        marker.setLatLng([lat, lng]);
-        const nearest = findNearestIndianDistrict(lat, lng);
         setCoords({ lat, lon: lng });
-        setSelectedState(nearest.state);
-        setSelectedDistrict(nearest.name);
-        const resolvedName = `${nearest.name}, ${nearest.state}, India`;
+        marker.setLatLng([lat, lng]);
         if (onUpdateCoordinates) {
-          onUpdateCoordinates(lat, lng, resolvedName, nearest.soil);
+          onUpdateCoordinates(lat, lng, `Field Coord (${lat.toFixed(4)}, ${lng.toFixed(4)})`, farm?.soil_type);
         }
       });
 
@@ -229,41 +195,27 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
       });
 
       mapInstanceRef.current = map;
-      markerRef.current = marker;
-    } else {
-      mapInstanceRef.current.setView([coords.lat, coords.lon]);
-      if (markerRef.current) {
-        markerRef.current.setLatLng([coords.lat, coords.lon]);
-      }
     }
 
-    updateMapPolygons(coords.lat, coords.lon);
-  }, [coords.lat, coords.lon]);
+    return () => {
+      // Keep instance intact across renders
+    };
+  }, []);
 
-  // Handle Base Layer Switching
+  // Update Base Layer
   useEffect(() => {
     if (!mapInstanceRef.current || !layersRef.current.satellite) return;
     const map = mapInstanceRef.current;
-    const { satellite, osm, topo } = layersRef.current;
-
-    [satellite, osm, topo].forEach((l) => {
-      if (map.hasLayer(l)) map.removeLayer(l);
-    });
-
-    if (activeBaseLayer === "satellite") satellite.addTo(map);
-    else if (activeBaseLayer === "osm") osm.addTo(map);
-    else if (activeBaseLayer === "topo") topo.addTo(map);
+    Object.values(layersRef.current).forEach((l) => map.removeLayer(l));
+    if (layersRef.current[activeBaseLayer]) {
+      layersRef.current[activeBaseLayer].addTo(map);
+    }
   }, [activeBaseLayer]);
 
-  // Handle Polygon & Overlay Visibility
+  // Update Farm Boundary Polygon & NDVI Zones around marker
   useEffect(() => {
     if (!mapInstanceRef.current) return;
-    updateMapPolygons(coords.lat, coords.lon);
-  }, [showBoundary, showNdvi, showSoilOverlay, showRainOverlay]);
-
-  const updateMapPolygons = (centerLat, centerLon) => {
     const map = mapInstanceRef.current;
-    if (!map) return;
 
     if (polygonRef.current) {
       map.removeLayer(polygonRef.current);
@@ -272,111 +224,58 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
     zonesRef.current.forEach((z) => map.removeLayer(z));
     zonesRef.current = [];
 
-    const dLat = 0.0022;
-    const dLon = 0.0028;
+    const d = 0.0035; // ~350-400m field parcel
+    const lat = coords.lat;
+    const lon = coords.lon;
 
-    const farmBoundaryCoords = [
-      [centerLat + dLat, centerLon - dLon],
-      [centerLat + dLat * 1.05, centerLon + dLon * 0.9],
-      [centerLat - dLat * 0.9, centerLon + dLon * 1.05],
-      [centerLat - dLat * 1.05, centerLon - dLon * 0.85]
-    ];
-
-    // 1. Boundary Polygon
     if (showBoundary) {
-      const boundaryPolygon = L.polygon(farmBoundaryCoords, {
-        color: "#22c55e",
-        weight: 3,
-        dashArray: "6, 6",
-        fillColor: "transparent",
-        opacity: 0.9
+      const boundaryCoords = [
+        [lat + d * 0.9, lon - d * 0.8],
+        [lat + d * 1.1, lon + d * 0.7],
+        [lat - d * 0.8, lon + d * 1.0],
+        [lat - d * 1.0, lon - d * 0.6]
+      ];
+
+      const poly = L.polygon(boundaryCoords, {
+        color: "#22C55E",
+        weight: 2.5,
+        fillColor: "#22C55E",
+        fillOpacity: showNdvi ? 0.15 : 0.05,
+        dashArray: "6, 6"
       }).addTo(map);
 
-      boundaryPolygon.bindTooltip(
-        `<strong>${farm?.farm_name || "Farm Parcel"}</strong><br/>Geofenced Area: ${farm?.area_acres || 5.0} Acres`,
-        { sticky: true }
-      );
-      polygonRef.current = boundaryPolygon;
+      polygonRef.current = poly;
+
+      // Simulated NDVI sub-zones
+      if (showNdvi) {
+        const zoneA = L.polygon([
+          [lat + d * 0.9, lon - d * 0.8],
+          [lat + d * 1.1, lon + d * 0.7],
+          [lat + d * 0.1, lon + d * 0.6],
+          [lat + d * 0.1, lon - d * 0.7]
+        ], {
+          color: "#16a34a",
+          weight: 0,
+          fillColor: "#16a34a",
+          fillOpacity: 0.35
+        }).addTo(map).bindTooltip(isHindi ? "ज़ोन १: NDVI ०.८१ (सघन हरापन)" : "Zone 1: NDVI 0.81 (Vigorous Canopy)");
+
+        const zoneB = L.polygon([
+          [lat + d * 0.1, lon - d * 0.7],
+          [lat + d * 0.1, lon + d * 0.6],
+          [lat - d * 1.0, lon + d * 0.2],
+          [lat - d * 1.0, lon - d * 0.6]
+        ], {
+          color: "#84cc16",
+          weight: 0,
+          fillColor: "#84cc16",
+          fillOpacity: 0.30
+        }).addTo(map).bindTooltip(isHindi ? "ज़ोन २: NDVI ०.६८ (सामान्य वानस्पतिक)" : "Zone 2: NDVI 0.68 (Normal Vegetative)");
+
+        zonesRef.current.push(zoneA, zoneB);
+      }
     }
-
-    // 2. NDVI Crop Health Zones
-    if (showNdvi) {
-      const q1 = L.polygon(
-        [
-          [centerLat + dLat * 0.95, centerLon - dLon * 0.9],
-          [centerLat + dLat, centerLon],
-          [centerLat, centerLon],
-          [centerLat, centerLon - dLon * 0.9]
-        ],
-        { color: "#16a34a", fillColor: "#22c55e", fillOpacity: 0.45, weight: 1 }
-      ).addTo(map);
-      q1.bindTooltip("Zone A: High Vigour (NDVI: 0.78)", { sticky: true });
-      zonesRef.current.push(q1);
-
-      const q2 = L.polygon(
-        [
-          [centerLat + dLat, centerLon],
-          [centerLat + dLat * 1.02, centerLon + dLon * 0.85],
-          [centerLat, centerLon + dLon * 0.9],
-          [centerLat, centerLon]
-        ],
-        { color: "#84cc16", fillColor: "#a3e635", fillOpacity: 0.4, weight: 1 }
-      ).addTo(map);
-      q2.bindTooltip("Zone B: Healthy Vegetative (NDVI: 0.65)", { sticky: true });
-      zonesRef.current.push(q2);
-
-      const q3 = L.polygon(
-        [
-          [centerLat, centerLon - dLon * 0.9],
-          [centerLat, centerLon],
-          [centerLat - dLat * 0.95, centerLon],
-          [centerLat - dLat * 0.98, centerLon - dLon * 0.8]
-        ],
-        { color: "#d97706", fillColor: "#f59e0b", fillOpacity: 0.4, weight: 1 }
-      ).addTo(map);
-      q3.bindTooltip("Zone C: Moisture Deficit (NDVI: 0.48)", { sticky: true });
-      zonesRef.current.push(q3);
-
-      const q4 = L.polygon(
-        [
-          [centerLat, centerLon],
-          [centerLat, centerLon + dLon * 0.9],
-          [centerLat - dLat * 0.85, centerLon + dLon * 0.95],
-          [centerLat - dLat * 0.95, centerLon]
-        ],
-        { color: "#15803d", fillColor: "#16a34a", fillOpacity: 0.45, weight: 1 }
-      ).addTo(map);
-      q4.bindTooltip("Zone D: Optimal Canopy (NDVI: 0.74)", { sticky: true });
-      zonesRef.current.push(q4);
-    }
-
-    // 3. Soil Moisture Gradient Overlay
-    if (showSoilOverlay) {
-      const soilCircle = L.circle([centerLat, centerLon], {
-        radius: 350,
-        color: "#0284c7",
-        fillColor: "#38bdf8",
-        fillOpacity: 0.3,
-        weight: 1.5,
-        dashArray: "4, 4"
-      }).addTo(map);
-      soilCircle.bindTooltip("Soil Moisture: 68% (Adequate Root Storage)", { sticky: true });
-      zonesRef.current.push(soilCircle);
-    }
-
-    // 4. Rain Radar Precipitation Halo
-    if (showRainOverlay) {
-      const rainHalo = L.circle([centerLat + 0.004, centerLon + 0.003], {
-        radius: 650,
-        color: "#6366f1",
-        fillColor: "#818cf8",
-        fillOpacity: 0.25,
-        weight: 1
-      }).addTo(map);
-      rainHalo.bindTooltip("NWP Radar: Approaching Precipitation Front (12-15mm)", { sticky: true });
-      zonesRef.current.push(rainHalo);
-    }
-  };
+  }, [coords, showBoundary, showNdvi, isHindi]);
 
   // Improved Live GPS Detection with Nearest District Auto-Match
   const handleDetectGps = () => {
@@ -384,7 +283,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
     setGpsLoading(true);
 
     if (!navigator.geolocation) {
-      setGpsStatus("Geolocation is not supported by your browser.");
+      setGpsStatus(isHindi ? "ब्राउज़र में GPS की सुविधा उपलब्ध नहीं है।" : "Geolocation is not supported by your browser.");
       setGpsLoading(false);
       return;
     }
@@ -400,7 +299,11 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
         setSelectedDistrict(nearest.name);
 
         const resolvedName = `${nearest.name}, ${nearest.state}, India (GPS Fix)`;
-        setGpsStatus(`✅ GPS Fix: Located near ${nearest.name}, ${nearest.state} (~${nearest.distanceKm} km)`);
+        setGpsStatus(
+          isHindi
+            ? `✅ GPS स्थिति: ${localizeTerm(nearest.name, true)}, ${localizeTerm(nearest.state, true)} (~${num(nearest.distanceKm)} किमी)`
+            : `✅ GPS Fix: Located near ${nearest.name}, ${nearest.state} (~${nearest.distanceKm} km)`
+        );
 
         if (mapInstanceRef.current) {
           mapInstanceRef.current.flyTo([newLat, newLon], 15, { duration: 1.5 });
@@ -416,13 +319,16 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
       },
       (err) => {
         console.warn("GPS Geolocation error:", err);
-        // Fallback: pick current selected district coordinates cleanly without breaking
         const currentDistObj = currentDistricts.find((d) => d.name === selectedDistrict);
         if (currentDistObj) {
-          setGpsStatus(`⚠️ Browser GPS permission denied. Using selected district: ${currentDistObj.name}, ${selectedState}.`);
+          setGpsStatus(
+            isHindi
+              ? `⚠️ GPS अनुमति अस्वीकृत। चयनित जिला: ${localizeTerm(currentDistObj.name, true)}, ${localizeTerm(selectedState, true)} उपयोग हो रहा है।`
+              : `⚠️ Browser GPS permission denied. Using selected district: ${currentDistObj.name}, ${selectedState}.`
+          );
           handleSelectLocation(currentDistObj.lat, currentDistObj.lon, `${currentDistObj.name}, ${selectedState}, India`, currentDistObj.soil);
         } else {
-          setGpsStatus("⚠️ Location permission denied or unavailable. Please select your State & District below.");
+          setGpsStatus(isHindi ? "⚠️ स्थान अनुमति अनुपलब्ध। कृपया नीचे राज्य व जिला चुनें।" : "⚠️ Location permission denied or unavailable. Please select your State & District below.");
         }
         setGpsLoading(false);
       },
@@ -432,7 +338,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
 
   return (
     <div className="space-y-5">
-      {/* Geospatial Map Header (Sky Theme) */}
+      {/* Geospatial Map Header */}
       <div className="card card-sky p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg">
         <div>
           <div className="flex items-center gap-3">
@@ -440,12 +346,16 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
               <MapPin className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5 font-display">
-                {t?.farmMap?.title || "Agricultural Geospatial Command"}
-                <span className="badge badge-sky text-xs font-tech">Sentinel-2 Ready</span>
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5 font-display flex-wrap">
+                {isHindi ? "कृषि भू-स्थानिक एवं भूमि मानचित्रण कमान" : (t?.farmMap?.title || "Agricultural Geospatial Command")}
+                <span className="badge badge-sky text-xs font-tech">
+                  {isHindi ? "सेंटिनल-२ उपग्रह तैयार" : "Sentinel-2 Ready"}
+                </span>
               </h1>
               <p className="text-xs text-sky-200/80 mt-0.5 font-sans">
-                Multi-spectral parcel intelligence, boundary geofencing, and precision pointer tracking
+                {isHindi
+                  ? "मल्टी-स्पेक्ट्रल उपग्रह डेटा, खेत सीमा बाड़बंदी और सटीक पिन ट्रैकिंग"
+                  : "Multi-spectral parcel intelligence, boundary geofencing, and precision pointer tracking"}
               </p>
             </div>
           </div>
@@ -456,10 +366,10 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
           <button
             onClick={handleCenterPointer}
             className="btn btn-secondary text-xs"
-            title="Center map on Current Location Pointer"
+            title={isHindi ? "नक्शे को वर्तमान पॉइंटर पर लाएं" : "Center map on Current Location Pointer"}
           >
             <Crosshair className="w-4 h-4 text-emerald-400" />
-            <span>Center Pointer</span>
+            <span>{isHindi ? "पॉइंटर केंद्रित करें" : "Center Pointer"}</span>
           </button>
 
           {/* Detect Live GPS Button */}
@@ -469,24 +379,26 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
             className="btn btn-primary text-xs"
           >
             <CompassIcon className={`w-4 h-4 ${gpsLoading ? "animate-spin" : ""}`} />
-            {gpsLoading ? "Acquiring GPS..." : t?.farmMap?.gpsButton || "Detect Live GPS"}
+            {gpsLoading
+              ? (isHindi ? "GPS खोजा जा रहा है..." : "Acquiring GPS...")
+              : (isHindi ? "सजीव GPS पहचानें" : (t?.farmMap?.gpsButton || "Detect Live GPS"))}
           </button>
         </div>
       </div>
 
-      {/* NOVA-VARSHA AI STYLE STATE & DISTRICT SELECTION BAR */}
+      {/* STATE & DISTRICT SELECTION BAR */}
       <div className="card p-4 bg-[var(--bg-card)] border border-[var(--border-1)] shadow-md">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider">
             <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span>Farm Parcel Location Selector (All India):</span>
+            <span>{isHindi ? "खेत स्थान चयनकर्ता (अखिल भारतीय):" : "Farm Parcel Location Selector (All India):"}</span>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 flex-1 max-w-2xl">
             {/* State Dropdown */}
             <div className="flex-1 min-w-[150px]">
               <label className="block text-[10px] font-bold text-[var(--text-muted)] uppercase mb-1">
-                Select State
+                {isHindi ? "राज्य चुनें" : "Select State"}
               </label>
               <select
                 value={selectedState}
@@ -495,7 +407,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
               >
                 {INDIA_STATES_DATA.map((s) => (
                   <option key={s.state} value={s.state} className="bg-slate-900 text-white">
-                    {s.state} ({s.districts.length} Districts)
+                    {localizeTerm(s.state, isHindi)} ({num(s.districts.length)} {isHindi ? "जिले" : "Districts"})
                   </option>
                 ))}
               </select>
@@ -504,7 +416,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
             {/* District Dropdown */}
             <div className="flex-1 min-w-[180px]">
               <label className="block text-[10px] font-bold text-[var(--text-muted)] uppercase mb-1">
-                Select District / Agro-Zone
+                {isHindi ? "जिला / कृषि-क्षेत्र चुनें" : "Select District / Agro-Zone"}
               </label>
               <select
                 value={selectedDistrict}
@@ -513,7 +425,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
               >
                 {currentDistricts.map((d) => (
                   <option key={d.name} value={d.name} className="bg-slate-900 text-white">
-                    {d.name} — {d.crop} ({d.zone})
+                    {d.name} — {localizeTerm(d.crop, isHindi)} ({d.zone})
                   </option>
                 ))}
               </select>
@@ -522,11 +434,11 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
             {/* Active Pointer Badge */}
             <div className="hidden sm:flex flex-col justify-end">
               <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase mb-1">
-                Active Pointer Pin
+                {isHindi ? "सक्रिय पिन निर्देशांक" : "Active Pointer Pin"}
               </span>
               <div className="px-3 py-2 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs font-mono font-bold flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>{coords.lat.toFixed(4)}°N, {coords.lon.toFixed(4)}°E</span>
+                <span>{num(coords.lat.toFixed(4))}°N, {num(coords.lon.toFixed(4))}°E</span>
               </div>
             </div>
           </div>
@@ -540,9 +452,9 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
         )}
       </div>
 
-      {/* Main Map Frame with Precision Layers and Pointer Controls */}
+      {/* Main Map Frame */}
       <div className="relative rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)] shadow-2xl">
-        {/* Floating Top Control Bar (Layers & Intelligence Overlays) */}
+        {/* Floating Top Control Bar */}
         <div className="absolute top-3 left-3 right-3 z-[1000] flex flex-wrap items-center justify-between gap-2 pointer-events-none">
           {/* Base Layer Switcher */}
           <div className="pointer-events-auto flex items-center gap-1 p-1 rounded-xl bg-[var(--surface)]/95 backdrop-blur-md border border-[var(--border)] shadow-lg">
@@ -554,7 +466,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
                   : "text-[var(--text-secondary)] hover:text-white"
               }`}
             >
-              Satellite Imagery
+              {isHindi ? "उपग्रह चित्र" : "Satellite Imagery"}
             </button>
             <button
               onClick={() => setActiveBaseLayer("topo")}
@@ -564,7 +476,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
                   : "text-[var(--text-secondary)] hover:text-white"
               }`}
             >
-              Topography
+              {isHindi ? "स्थलाकृति" : "Topography"}
             </button>
             <button
               onClick={() => setActiveBaseLayer("osm")}
@@ -574,7 +486,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
                   : "text-[var(--text-secondary)] hover:text-white"
               }`}
             >
-              Road Map
+              {isHindi ? "सड़क नक्शा" : "Road Map"}
             </button>
           </div>
 
@@ -589,7 +501,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
               }`}
             >
               <Sprout className="w-3.5 h-3.5" />
-              Boundary
+              {isHindi ? "खेत सीमा" : "Boundary"}
             </button>
 
             <button
@@ -601,7 +513,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
               }`}
             >
               <Activity className="w-3.5 h-3.5" />
-              NDVI Vigour
+              {isHindi ? "NDVI हरापन" : "NDVI Vigour"}
             </button>
 
             <button
@@ -613,7 +525,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
               }`}
             >
               <Droplets className="w-3.5 h-3.5" />
-              Soil Moisture
+              {isHindi ? "मृदा नमी" : "Soil Moisture"}
             </button>
 
             <button
@@ -625,7 +537,7 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
               }`}
             >
               <CloudRain className="w-3.5 h-3.5" />
-              Rain Radar
+              {isHindi ? "वर्षा रडार" : "Rain Radar"}
             </button>
           </div>
         </div>
@@ -638,29 +550,31 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
           <div className="flex items-center justify-between text-[11px] text-[var(--leaf)] font-bold mb-1.5">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-              <span>CURRENT POINTER HUD</span>
+              <span>{isHindi ? "सक्रिय पॉइंटर HUD" : "CURRENT POINTER HUD"}</span>
             </span>
-            <span className="text-[var(--text-muted)] font-normal">Zoom {zoomLevel}x</span>
+            <span className="text-[var(--text-muted)] font-normal">{isHindi ? "ज़ूम" : "Zoom"} {num(zoomLevel)}x</span>
           </div>
 
           <div className="text-white font-bold text-xs mb-1 truncate">
-            📍 {farm?.location_name || `${selectedDistrict}, ${selectedState}`}
+            📍 {farm?.location_name || `${selectedDistrict}, ${localizeTerm(selectedState, isHindi)}`}
           </div>
 
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[var(--text-secondary)]">
-            <div>Lat: <span className="text-emerald-400 font-bold">{coords.lat.toFixed(4)}°N</span></div>
-            <div>Lon: <span className="text-emerald-400 font-bold">{coords.lon.toFixed(4)}°E</span></div>
-            <div>Area: <span className="text-white font-bold">{farm?.area_acres || 5.0} Acres</span></div>
-            <div>Datum: <span className="text-white font-bold">WGS 84</span></div>
+            <div>{isHindi ? "अक्षांश:" : "Lat:"} <span className="text-emerald-400 font-bold">{num(coords.lat.toFixed(4))}°N</span></div>
+            <div>{isHindi ? "देशांतर:" : "Lon:"} <span className="text-emerald-400 font-bold">{num(coords.lon.toFixed(4))}°E</span></div>
+            <div>{isHindi ? "रकबा:" : "Area:"} <span className="text-white font-bold">{num(farm?.area_acres || 5.0)} {isHindi ? "एकड़" : "Acres"}</span></div>
+            <div>{isHindi ? "डेटम:" : "Datum:"} <span className="text-white font-bold">WGS {isHindi ? "८४" : "84"}</span></div>
           </div>
 
           <div className="mt-2 pt-2 border-t border-[var(--border-subtle)] text-[10px] text-[var(--text-muted)] flex items-center justify-between">
-            <span className="text-emerald-300">Tip: Click map or drag pointer to move</span>
+            <span className="text-emerald-300">
+              {isHindi ? "सुझाव: नक्शे पर कहीं भी क्लिक करें" : "Tip: Click map or drag pointer to move"}
+            </span>
             <button
               onClick={handleCenterPointer}
               className="text-emerald-400 hover:underline font-bold"
             >
-              Focus Pin
+              {isHindi ? "पिन पर लाएं" : "Focus Pin"}
             </button>
           </div>
         </div>
@@ -669,50 +583,75 @@ export default function FarmMap({ farm, onUpdateCoordinates, t }) {
         {showNdvi && (
           <div className="absolute bottom-3 right-16 z-[1000] p-2.5 rounded-xl bg-[var(--surface)]/95 backdrop-blur-md border border-[var(--border)] shadow-xl text-[11px] hidden sm:block">
             <div className="font-bold text-white mb-1.5 flex items-center gap-1">
-              <Activity className="w-3 h-3 text-[var(--leaf)]" /> NDVI Crop Vigour Scale
+              <Activity className="w-3 h-3 text-[var(--leaf)]" />{" "}
+              {isHindi ? "NDVI फसल स्वास्थ्य पैमाना" : "NDVI Crop Vigour Scale"}
             </div>
             <div className="flex items-center gap-2 font-mono text-[10px]">
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#16a34a]" /> &gt;0.7 Dense
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#16a34a]" /> {isHindi ? ">०.७ सघन हरा" : ">0.7 Dense"}
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#84cc16]" /> 0.5-0.7 Normal
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#84cc16]" /> {isHindi ? "०.५-०.७ सामान्य" : "0.5-0.7 Normal"}
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#d97706]" /> &lt;0.5 Stress
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#d97706]" /> {isHindi ? "<०.५ तनाव" : "<0.5 Stress"}
               </span>
             </div>
           </div>
         )}
       </div>
 
-      {/* Geospatial Insights Strip (Multi-Color Cards) */}
+      {/* Geospatial Insights Strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="card card-leaf p-4 space-y-1">
-          <span className="text-xs font-bold text-[var(--c-leaf-neon)] uppercase tracking-wider font-tech">Topographic Gradient</span>
+          <span className="text-xs font-bold text-[var(--c-leaf-neon)] uppercase tracking-wider font-tech">
+            {isHindi ? "धरातलीय ढलान" : "Topographic Gradient"}
+          </span>
           <div className="text-base font-bold text-white flex items-center justify-between font-display">
-            <span>Slope &lt; 1.5% (Flat)</span>
-            <span className="badge badge-leaf text-xs font-tech">Low Runoff</span>
+            <span>{isHindi ? "ढलान < १.५% (समतल)" : "Slope < 1.5% (Flat)"}</span>
+            <span className="badge badge-leaf text-xs font-tech">
+              {isHindi ? "न्यूनतम जल बहाव" : "Low Runoff"}
+            </span>
           </div>
-          <p className="text-[11px] text-emerald-200/80 font-sans">Minimal erosion hazard; suitable for mechanized broad-furrow cultivation.</p>
+          <p className="text-[11px] text-emerald-200/80 font-sans">
+            {isHindi
+              ? "मृदा कटाव का न्यूनतम खतरा; आधुनिक कृषि यंत्रों एवं क्यारी बुवाई के लिए उपयुक्त।"
+              : "Minimal erosion hazard; suitable for mechanized broad-furrow cultivation."}
+          </p>
         </div>
 
         <div className="card card-sky p-4 space-y-1">
-          <span className="text-xs font-bold text-[var(--c-sky-neon)] uppercase tracking-wider font-tech">Geospatial Soil Zone</span>
+          <span className="text-xs font-bold text-[var(--c-sky-neon)] uppercase tracking-wider font-tech">
+            {isHindi ? "भू-स्थानिक मृदा क्षेत्र" : "Geospatial Soil Zone"}
+          </span>
           <div className="text-base font-bold text-white flex items-center justify-between font-display">
-            <span>{farm?.soil_type || "Alluvial Loam"}</span>
-            <span className="badge badge-sky text-xs font-tech">High CEC</span>
+            <span>{localizeTerm(farm?.soil_type || "Alluvial / Loam", isHindi)}</span>
+            <span className="badge badge-sky text-xs font-tech">
+              {isHindi ? "उच्च जलधारण" : "High CEC"}
+            </span>
           </div>
-          <p className="text-[11px] text-sky-200/80 font-sans">Excellent water retention with depth-to-bedrock exceeding 180 cm.</p>
+          <p className="text-[11px] text-sky-200/80 font-sans">
+            {isHindi
+              ? "उत्कृष्ट जल धारण क्षमता, मिट्टी की गहराई १८० सेमी से अधिक।"
+              : "Excellent water retention with depth-to-bedrock exceeding 180 cm."}
+          </p>
         </div>
 
         <div className="card card-indigo p-4 space-y-1">
-          <span className="text-xs font-bold text-[var(--c-indigo-neon)] uppercase tracking-wider font-tech">Canopy Cover Index</span>
+          <span className="text-xs font-bold text-[var(--c-indigo-neon)] uppercase tracking-wider font-tech">
+            {isHindi ? "फसल छतरी आवरण सूचकांक" : "Canopy Cover Index"}
+          </span>
           <div className="text-base font-bold text-white flex items-center justify-between font-display">
-            <span>0.72 Fractional Cover</span>
-            <span className="badge badge-indigo text-xs font-tech">Healthy</span>
+            <span>{isHindi ? "०.७२ आंशिक आवरण" : "0.72 Fractional Cover"}</span>
+            <span className="badge badge-indigo text-xs font-tech">
+              {isHindi ? "स्वस्थ" : "Healthy"}
+            </span>
           </div>
-          <p className="text-[11px] text-indigo-200/80 font-sans">Multi-spectral reflectance indicates robust leaf area index (LAI 3.4).</p>
+          <p className="text-[11px] text-indigo-200/80 font-sans">
+            {isHindi
+              ? "उपग्रह परावर्तन मजबूत पत्ती क्षेत्र सूचकांक (LAI ३.४) दर्शाता है।"
+              : "Multi-spectral reflectance indicates robust leaf area index (LAI 3.4)."}
+          </p>
         </div>
       </div>
     </div>

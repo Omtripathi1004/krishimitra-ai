@@ -12,26 +12,30 @@ import {
   AlertCircle,
   CheckSquare
 } from "lucide-react";
+import { toHindiDigits } from "../translations";
 
-export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDeleteTask, t }) {
+export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDeleteTask, t, language, isHindi: propIsHindi }) {
+  const isHindi = propIsHindi || language === "hi" || Boolean(t?.liveTelemetry?.includes("सजीव"));
+  const num = (v) => (isHindi ? toHindiDigits(v) : String(v));
+
   const [filter, setFilter] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newTask, setNewTask] = useState({
     title: "",
     category: "general",
-    due_date: "Today",
+    due_date: isHindi ? "आज" : "Today",
     priority: "medium",
     notes: ""
   });
 
   const categories = [
-    { id: "all", label: "All Activities" },
-    { id: "irrigation", label: "Irrigation" },
-    { id: "fertilizer", label: "Fertilizer" },
-    { id: "pest_control", label: "Pest & Disease" },
-    { id: "sowing", label: "Sowing / Weeding" },
-    { id: "harvest", label: "Harvest" },
-    { id: "general", label: "General" }
+    { id: "all", label: isHindi ? "सभी कार्य" : "All Activities" },
+    { id: "irrigation", label: isHindi ? "सिंचाई" : "Irrigation" },
+    { id: "fertilizer", label: isHindi ? "उर्वरक / खाद" : "Fertilizer" },
+    { id: "pest_control", label: isHindi ? "कीट एवं रोग" : "Pest & Disease" },
+    { id: "sowing", label: isHindi ? "बुवाई / निराई" : "Sowing / Weeding" },
+    { id: "harvest", label: isHindi ? "कटाई" : "Harvest" },
+    { id: "general", label: isHindi ? "सामान्य" : "General" }
   ];
 
   const filteredTasks = tasks.filter((task) => {
@@ -46,8 +50,41 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
     e.preventDefault();
     if (!newTask.title.trim()) return;
     await onCreateTask(newTask);
-    setNewTask({ title: "", category: "general", due_date: "Today", priority: "medium", notes: "" });
+    setNewTask({
+      title: "",
+      category: "general",
+      due_date: isHindi ? "आज" : "Today",
+      priority: "medium",
+      notes: ""
+    });
     setShowAddModal(false);
+  };
+
+  const getLocalizedCategory = (cat) => {
+    if (!isHindi) return cat;
+    const map = {
+      irrigation: "सिंचाई",
+      fertilizer: "उर्वरक",
+      pest_control: "कीट नियंत्रण",
+      sowing: "बुवाई",
+      harvest: "कटाई",
+      general: "सामान्य"
+    };
+    return map[cat?.toLowerCase()] || cat;
+  };
+
+  const getLocalizedPriority = (p) => {
+    if (!isHindi) return `${p} Priority`;
+    if (p === "high") return "उच्च प्राथमिकता";
+    if (p === "medium") return "मध्यम प्राथमिकता";
+    return "सामान्य प्राथमिकता";
+  };
+
+  const formatDueDate = (dateStr) => {
+    if (!isHindi) return dateStr;
+    if (dateStr === "Today") return "आज";
+    if (dateStr === "Tomorrow") return "कल";
+    return toHindiDigits(dateStr);
   };
 
   return (
@@ -60,14 +97,16 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
               <CalendarDays className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5 font-display">
-                {t?.planner?.title || "Agronomic Schedule & Work Planner"}
+              <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5 font-display flex-wrap">
+                {isHindi ? "कृषि कार्य एवं मील का पत्थर योजनाकार" : (t?.planner?.title || "Agronomic Schedule & Work Planner")}
                 <span className="badge badge-leaf text-xs font-tech">
-                  {completedCount} / {tasks.length} Completed
+                  {num(completedCount)} / {num(tasks.length)} {isHindi ? "पूर्ण" : "Completed"}
                 </span>
               </h1>
               <p className="text-xs text-emerald-200/80 mt-0.5 font-sans">
-                Seasonal field task orchestration, phenological milestones, and input scheduling
+                {isHindi
+                  ? "मौसमी बुवाई, खाद, सिंचाई और कटाई के कार्यों का वैज्ञानिक समय-प्रबंधन"
+                  : "Seasonal field task orchestration, phenological milestones, and input scheduling"}
               </p>
             </div>
           </div>
@@ -79,7 +118,7 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
             className="btn btn-primary text-xs py-2 px-4 shadow-md font-tech"
           >
             <Plus className="w-4 h-4" />
-            <span>{t?.planner?.addTask || "Schedule Activity"}</span>
+            <span>{isHindi ? "+ नया कार्य जोड़ें" : (t?.planner?.addTask || "Schedule Activity")}</span>
           </button>
         </div>
       </div>
@@ -88,9 +127,10 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
       <div className="card card-indigo p-4 space-y-2">
         <div className="flex items-center justify-between text-xs">
           <span className="font-semibold text-white flex items-center gap-1.5 font-tech">
-            <CheckSquare className="w-4 h-4 text-[var(--c-indigo-neon)]" /> Activity Completion Index
+            <CheckSquare className="w-4 h-4 text-[var(--c-indigo-neon)]" />{" "}
+            {isHindi ? "कार्य पूर्णता सूचकांक" : "Activity Completion Index"}
           </span>
-          <span className="font-mono font-bold text-[var(--c-indigo-neon)] text-sm">{progressPercent}%</span>
+          <span className="font-mono font-bold text-[var(--c-indigo-neon)] text-sm">{num(progressPercent)}%</span>
         </div>
         <div className="w-full h-2.5 rounded-full bg-[var(--surface-2)] overflow-hidden">
           <div
@@ -121,7 +161,9 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
       <div className="space-y-3">
         {filteredTasks.length === 0 ? (
           <div className="card p-12 text-center text-xs text-[var(--text-muted)]">
-            No activities scheduled in this category. Click "+ Schedule Activity" to plan your farm milestones.
+            {isHindi
+              ? "इस श्रेणी में कोई कार्य निर्धारित नहीं है। नया कार्य जोड़ने के लिए ऊपर '+ नया कार्य जोड़ें' पर क्लिक करें।"
+              : "No activities scheduled in this category. Click \"+ Schedule Activity\" to plan your farm milestones."}
           </div>
         ) : (
           filteredTasks.map((task) => {
@@ -144,7 +186,7 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
                   <button
                     onClick={() => onToggleTask(task.id)}
                     className="cursor-pointer hover:scale-110 transition-transform"
-                    title={isCompleted ? "Mark incomplete" : "Mark completed"}
+                    title={isCompleted ? (isHindi ? "अपूर्ण के रूप में चिह्नित करें" : "Mark incomplete") : (isHindi ? "पूर्ण चिह्नित करें" : "Mark completed")}
                   >
                     {isCompleted ? (
                       <CheckCircle2 className="w-5 h-5 text-[var(--c-leaf-neon)]" />
@@ -160,10 +202,12 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
                     <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-[var(--text-secondary)]">
                       <span className="flex items-center gap-1 text-[var(--c-sky-neon)] font-mono">
                         <Clock className="w-3 h-3" />
-                        {task.due_date}
+                        {formatDueDate(task.due_date)}
                       </span>
                       <span>•</span>
-                      <span className="capitalize text-[var(--c-leaf-neon)] font-medium font-tech">{task.category}</span>
+                      <span className="capitalize text-[var(--c-leaf-neon)] font-medium font-tech">
+                        {getLocalizedCategory(task.category)}
+                      </span>
                       <span>•</span>
                       <span className={`badge text-[10px] py-0.2 px-1.5 font-tech ${
                         task.priority === "high"
@@ -172,7 +216,7 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
                           ? "badge-warning"
                           : "badge-emerald"
                       }`}>
-                        {task.priority} Priority
+                        {getLocalizedPriority(task.priority)}
                       </span>
                     </div>
                   </div>
@@ -182,7 +226,7 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
                   <button
                     onClick={() => onDeleteTask(task.id)}
                     className="p-2 rounded-lg text-[var(--text-muted)] hover:text-red-400 hover:bg-red-950/20 transition-colors"
-                    title="Delete Activity"
+                    title={isHindi ? "कार्य हटाएं" : "Delete Activity"}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -198,7 +242,9 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="card max-w-lg w-full p-6 space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-[var(--border)] pb-3">
-              <h3 className="text-base font-bold text-white">Schedule New Farm Activity</h3>
+              <h3 className="text-base font-bold text-white">
+                {isHindi ? "नया कृषि कार्य जोड़ें" : "Schedule New Farm Activity"}
+              </h3>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-white"
@@ -209,12 +255,18 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
 
             <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
               <div>
-                <label className="block text-[var(--text-secondary)] mb-1 font-medium">Activity Title</label>
+                <label className="block text-[var(--text-secondary)] mb-1 font-medium">
+                  {isHindi ? "कार्य का नाम / विवरण" : "Activity Title"}
+                </label>
                 <input
                   type="text"
                   value={newTask.title}
                   onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                  placeholder="e.g., Apply second split of Urea at Crown Root Initiation (CRI)"
+                  placeholder={
+                    isHindi
+                      ? "जैसे: कल्ले फूटने पर यूरिया का दूसरा छिड़काव करें"
+                      : "e.g., Apply second split of Urea at Crown Root Initiation (CRI)"
+                  }
                   className="w-full rounded-xl bg-[var(--surface-2)] border border-[var(--border)] px-3.5 py-2 text-white focus:outline-none focus:border-[var(--primary)] text-xs"
                   required
                 />
@@ -222,42 +274,48 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[var(--text-secondary)] mb-1 font-medium">Category</label>
+                  <label className="block text-[var(--text-secondary)] mb-1 font-medium">
+                    {isHindi ? "श्रेणी" : "Category"}
+                  </label>
                   <select
                     value={newTask.category}
                     onChange={(e) => setNewTask({ ...newTask, category: e.target.value })}
                     className="w-full rounded-xl bg-[var(--surface-2)] border border-[var(--border)] px-3 py-2 text-white focus:outline-none focus:border-[var(--primary)] text-xs"
                   >
-                    <option value="irrigation">Irrigation</option>
-                    <option value="fertilizer">Fertilizer</option>
-                    <option value="pest_control">Pest & Disease</option>
-                    <option value="sowing">Sowing / Weeding</option>
-                    <option value="harvest">Harvest</option>
-                    <option value="general">General</option>
+                    <option value="irrigation">{isHindi ? "सिंचाई" : "Irrigation"}</option>
+                    <option value="fertilizer">{isHindi ? "उर्वरक / खाद" : "Fertilizer"}</option>
+                    <option value="pest_control">{isHindi ? "कीट एवं रोग" : "Pest & Disease"}</option>
+                    <option value="sowing">{isHindi ? "बुवाई / निराई" : "Sowing / Weeding"}</option>
+                    <option value="harvest">{isHindi ? "कटाई" : "Harvest"}</option>
+                    <option value="general">{isHindi ? "सामान्य" : "General"}</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-[var(--text-secondary)] mb-1 font-medium">Priority</label>
+                  <label className="block text-[var(--text-secondary)] mb-1 font-medium">
+                    {isHindi ? "प्राथमिकता" : "Priority"}
+                  </label>
                   <select
                     value={newTask.priority}
                     onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
                     className="w-full rounded-xl bg-[var(--surface-2)] border border-[var(--border)] px-3 py-2 text-white focus:outline-none focus:border-[var(--primary)] text-xs"
                   >
-                    <option value="high">High Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="low">Low Priority</option>
+                    <option value="high">{isHindi ? "उच्च प्राथमिकता" : "High Priority"}</option>
+                    <option value="medium">{isHindi ? "मध्यम प्राथमिकता" : "Medium Priority"}</option>
+                    <option value="low">{isHindi ? "सामान्य प्राथमिकता" : "Low Priority"}</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[var(--text-secondary)] mb-1 font-medium">Due Date / Timeline</label>
+                <label className="block text-[var(--text-secondary)] mb-1 font-medium">
+                  {isHindi ? "नियत तिथि / समय" : "Due Date / Timeline"}
+                </label>
                 <input
                   type="text"
                   value={newTask.due_date}
                   onChange={(e) => setNewTask({ ...newTask, due_date: e.target.value })}
-                  placeholder="e.g., Tomorrow morning, In 3 days, 2026-09-22"
+                  placeholder={isHindi ? "जैसे: आज, कल सुबह, ३ दिनों में" : "e.g., Tomorrow morning, In 3 days, 2026-09-22"}
                   className="w-full rounded-xl bg-[var(--surface-2)] border border-[var(--border)] px-3.5 py-2 text-white focus:outline-none focus:border-[var(--primary)] text-xs"
                 />
               </div>
@@ -268,13 +326,13 @@ export default function FarmPlanner({ tasks, onToggleTask, onCreateTask, onDelet
                   onClick={() => setShowAddModal(false)}
                   className="btn btn-secondary text-xs py-2 px-3"
                 >
-                  Cancel
+                  {isHindi ? "रद्द करें" : "Cancel"}
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary text-xs py-2 px-4"
                 >
-                  Schedule Activity
+                  {isHindi ? "कार्य जोड़ें" : "Schedule Activity"}
                 </button>
               </div>
             </form>

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from backend.database import engine, Base, get_db
 from backend.models import Farm, PlannerTask
-from backend.ml_model import predict_crop_suitability, train_or_load_model
+from backend.ml_model import predict_crop_suitability, train_or_load_model, get_model_evaluation_metrics
 from backend.weather_service import get_live_weather
 from backend.irrigation_service import compute_smart_irrigation
 from backend.assistant_service import generate_assistant_response
@@ -311,3 +311,8 @@ def get_farm_analytics(db: Session = Depends(get_db)):
         "farm_area_acres": farm.area_acres,
         "irrigation_savings_pct": 38
     }
+
+@app.get("/api/model-evaluation")
+def get_model_evaluation():
+    return get_model_evaluation_metrics()
+

@@ -11,9 +11,11 @@ import {
   Sparkles,
   Layers,
   Wheat,
-  Globe
+  Globe,
+  Film
 } from "lucide-react";
 import { INDIA_STATES_DATA } from "../data/indiaLocations";
+import { translations, toHindiDigits, localizeTerm } from "../translations";
 
 // Pre-configured real Indian demo farmer profiles
 export const DEMO_FARMER_ACCOUNTS = [
@@ -104,7 +106,11 @@ export const DEMO_FARMER_ACCOUNTS = [
   }
 ];
 
-export default function LoginPage({ onLogin, language, setLanguage }) {
+export default function LoginPage({ onLogin, language, setLanguage, onWatchAd }) {
+  const isHindi = language === "hi";
+  const num = (v) => (isHindi ? toHindiDigits(v) : String(v));
+  const tLog = translations[language]?.login || translations.en?.login || {};
+
   const [authTab, setAuthTab] = useState("quickDemo"); // "quickDemo" | "mobile" | "register"
   const [mobileNumber, setMobileNumber] = useState("");
   const [otpSent, setOtpSent] = useState(false);
@@ -136,7 +142,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
   const handleSendOtp = (e) => {
     e.preventDefault();
     if (mobileNumber.length < 10) {
-      setOtpError("Please enter a valid 10-digit Indian mobile number.");
+      setOtpError(isHindi ? "कृपया वैध १०-अंकों का भारतीय मोबाइल नंबर दर्ज करें।" : "Please enter a valid 10-digit Indian mobile number.");
       return;
     }
     setOtpError("");
@@ -153,21 +159,21 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
   const handleVerifyOtp = (e) => {
     e.preventDefault();
     if (!otpValue || otpValue.length < 4) {
-      setOtpError("Please enter the 4-digit OTP.");
+      setOtpError(isHindi ? "कृपया ४-अंकों का OTP दर्ज करें।" : "Please enter the 4-digit OTP.");
       return;
     }
     setLoading(true);
     setTimeout(() => {
       const loggedUser = {
         id: `farmer_${mobileNumber}`,
-        farmer_name: "Farmer " + mobileNumber.slice(-4),
+        farmer_name: (isHindi ? "किसान " : "Farmer ") + mobileNumber.slice(-4),
         mobile: mobileNumber,
         state: "Punjab",
         district: "Ludhiana",
         location_name: "Ludhiana, Punjab, India",
         latitude: 30.9010,
         longitude: 75.8573,
-        farm_name: "Krishi Farmer Parcel",
+        farm_name: isHindi ? "आदर्श कृषि प्रक्षेत्र" : "Krishi Farmer Parcel",
         area_acres: 5.0,
         current_crop: "Wheat",
         crop_stage: "Vegetative",
@@ -184,7 +190,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
   const handleRegisterFarm = (e) => {
     e.preventDefault();
     if (!regName || !regMobile) {
-      setOtpError("Please fill in farmer name and mobile.");
+      setOtpError(isHindi ? "कृपया किसान का नाम और मोबाइल नंबर भरें।" : "Please fill in farmer name and mobile.");
       return;
     }
     setLoading(true);
@@ -203,7 +209,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
       location_name: `${regDistrict}, ${regState}, India`,
       latitude: districtObj.lat,
       longitude: districtObj.lon,
-      farm_name: `${regName}'s Farm`,
+      farm_name: isHindi ? `${regName} का खेत` : `${regName}'s Farm`,
       area_acres: parseFloat(regArea) || 5.0,
       current_crop: regCrop,
       crop_stage: "Germination & Seedling",
@@ -228,22 +234,33 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-base tracking-tight text-white">
+              <span className="font-extrabold text-base tracking-tight text-white font-display">
                 KrishiMitra AI
               </span>
               <span className="badge badge-emerald text-[10px]">v2.4 PRO</span>
             </div>
             <p className="text-[11px] text-[var(--text-secondary)]">
-              Digital Agriculture Mission • ICAR Precision Agronomy Engine
+              {tLog.missionSub || "Digital Agriculture Mission • ICAR Precision Agronomy Engine"}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2.5">
+          {onWatchAd && (
+            <button
+              onClick={onWatchAd}
+              className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-emerald-600 via-green-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-md shadow-emerald-950 border border-emerald-400/50 cursor-pointer"
+              title={isHindi ? "९०-सेकंड का कमर्शियल विज्ञापन देखें" : "Watch 90-Second Platform Commercial (Ad Showcase)"}
+            >
+              <Film className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <span>{tLog.watchAdBtn || "🎬 Watch Ad (1m 30s)"}</span>
+            </button>
+          )}
+
           {/* Language Switcher */}
           <button
             onClick={() => setLanguage(language === "en" ? "hi" : "en")}
-            className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-xs font-bold text-white hover:border-[var(--primary)] transition-colors flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border)] text-xs font-bold text-white hover:border-[var(--primary)] transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <Globe className="w-3.5 h-3.5 text-emerald-400" />
             <span>{language === "en" ? "हिन्दी (HI)" : "English (EN)"}</span>
@@ -262,13 +279,13 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
           <div className="text-center mb-6 relative z-10">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-3">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>National Smart Farming Portal</span>
+              <span>{tLog.missionBadge || "National Smart Farming Portal"}</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-              Welcome to KrishiMitra AI
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-display">
+              {tLog.welcomeTitle || "Welcome to KrishiMitra AI"}
             </h1>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1.5 max-w-md mx-auto">
-              Sign in to access real-time satellite parcel telemetry, AI crop health diagnostics, and precision hydrology guidance.
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1.5 max-w-md mx-auto leading-relaxed">
+              {tLog.welcomeSub || "Sign in to access real-time satellite parcel telemetry, AI crop health diagnostics, and precision hydrology guidance."}
             </p>
           </div>
 
@@ -279,14 +296,14 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                 setAuthTab("quickDemo");
                 setOtpError("");
               }}
-              className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authTab === "quickDemo"
-                  ? "bg-emerald-600 text-white shadow-md"
+                  ? "bg-emerald-600 text-white shadow-md font-extrabold"
                   : "text-[var(--text-muted)] hover:text-white"
               }`}
             >
               <UserCheck className="w-4 h-4" />
-              <span>1-Click Demo Farmers</span>
+              <span>{tLog.tabQuickDemo || "1-Click Demo Farmers"}</span>
             </button>
 
             <button
@@ -294,14 +311,14 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                 setAuthTab("mobile");
                 setOtpError("");
               }}
-              className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authTab === "mobile"
-                  ? "bg-emerald-600 text-white shadow-md"
+                  ? "bg-emerald-600 text-white shadow-md font-extrabold"
                   : "text-[var(--text-muted)] hover:text-white"
               }`}
             >
               <Phone className="w-4 h-4" />
-              <span>Mobile OTP Login</span>
+              <span>{tLog.tabMobile || "Mobile OTP Login"}</span>
             </button>
 
             <button
@@ -309,26 +326,26 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                 setAuthTab("register");
                 setOtpError("");
               }}
-              className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2.5 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 authTab === "register"
-                  ? "bg-emerald-600 text-white shadow-md"
+                  ? "bg-emerald-600 text-white shadow-md font-extrabold"
                   : "text-[var(--text-muted)] hover:text-white"
               }`}
             >
               <Sprout className="w-4 h-4" />
-              <span>Register New Farm</span>
+              <span>{tLog.tabRegister || "Register New Farm"}</span>
             </button>
           </div>
 
-          {/* TAB 1: QUICK DEMO PROFILES (RECOMMENDED FOR JUDGES / INSTANT ACCESS) */}
+          {/* TAB 1: QUICK DEMO PROFILES */}
           {authTab === "quickDemo" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
-                  Select a State Agro-Profile to Launch:
+                  {tLog.selectProfileToLaunch || "Select a State Agro-Profile to Launch:"}
                 </span>
                 <span className="text-[11px] text-emerald-400 font-semibold">
-                  Instant Access (No Password Required)
+                  {tLog.instantAccess || "Instant Access (No Password Required)"}
                 </span>
               </div>
 
@@ -338,7 +355,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                     key={account.id}
                     onClick={() => handleSelectDemoUser(account)}
                     disabled={loading}
-                    className="p-3.5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border)] hover:border-emerald-400/80 hover:bg-emerald-950/20 text-left transition-all group flex items-start gap-3 relative"
+                    className="p-3.5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border)] hover:border-emerald-400/80 hover:bg-emerald-950/20 text-left transition-all group flex items-start gap-3 relative cursor-pointer"
                   >
                     <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-xl flex-shrink-0 group-hover:scale-105 transition-transform">
                       {account.avatar}
@@ -349,20 +366,20 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                           {account.farmer_name}
                         </span>
                         <span className="badge badge-emerald text-[10px]">
-                          {account.state}
+                          {localizeTerm(account.state, isHindi)}
                         </span>
                       </div>
                       <p className="text-xs text-[var(--text-secondary)] flex items-center gap-1 mt-0.5 truncate">
                         <MapPin className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                        <span>{account.district} • {account.area_acres} Acres</span>
+                        <span>{account.district} • {num(account.area_acres)} {isHindi ? "एकड़" : "Acres"}</span>
                       </p>
                       <div className="mt-2 flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)]">
-                        <span className="text-emerald-400 font-bold">{account.current_crop}</span>
+                        <span className="text-emerald-400 font-bold">{localizeTerm(account.current_crop, isHindi)}</span>
                         <span>•</span>
-                        <span>{account.soil_type}</span>
+                        <span className="truncate">{localizeTerm(account.soil_type, isHindi)}</span>
                       </div>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-emerald-400 group-hover:translate-x-1 transition-all self-center ml-1" />
+                    <ArrowRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-emerald-400 group-hover:translate-x-1 transition-all self-center ml-1 shrink-0" />
                   </button>
                 ))}
               </div>
@@ -376,7 +393,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                 <form onSubmit={handleSendOtp} className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">
-                      Farmer Mobile Number
+                      {tLog.farmerMobile || "Farmer Mobile Number"}
                     </label>
                     <div className="relative">
                       <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-emerald-400">
@@ -393,7 +410,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                       />
                     </div>
                     <p className="text-[11px] text-[var(--text-secondary)] mt-1.5">
-                      A 4-digit verification code will be sent to your mobile phone.
+                      {isHindi ? "आपके मोबाइल फोन पर ४-अंकों का सत्यापन कोड भेजा जाएगा।" : "A 4-digit verification code will be sent to your mobile phone."}
                     </p>
                   </div>
 
@@ -404,28 +421,28 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                   <button
                     type="submit"
                     disabled={loading || mobileNumber.length < 10}
-                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30"
+                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 cursor-pointer"
                   >
-                    {loading ? "Sending OTP..." : "Send Verification OTP"}
+                    {loading ? (isHindi ? "OTP भेजा जा रहा है..." : "Sending OTP...") : (tLog.sendOtp || "Send Verification OTP")}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </form>
               ) : (
                 <form onSubmit={handleVerifyOtp} className="space-y-4">
                   <div className="p-3 rounded-xl bg-emerald-950/30 border border-emerald-500/30 text-xs text-emerald-300 flex items-center justify-between">
-                    <span>OTP sent to +91 {mobileNumber}</span>
+                    <span>{tLog.otpSentTo || "OTP sent to"} +91 {mobileNumber}</span>
                     <button
                       type="button"
                       onClick={() => setOtpSent(false)}
-                      className="text-white underline font-bold"
+                      className="text-white underline font-bold cursor-pointer"
                     >
-                      Change
+                      {tLog.change || "Change"}
                     </button>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-[var(--text-secondary)] mb-1.5">
-                      Enter 4-Digit OTP
+                      {tLog.enterOtp || "Enter 4-Digit OTP"}
                     </label>
                     <input
                       type="text"
@@ -440,11 +457,11 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                       <button
                         type="button"
                         onClick={() => setOtpValue("1004")}
-                        className="text-emerald-400 font-bold hover:underline"
+                        className="text-emerald-400 font-bold hover:underline cursor-pointer"
                       >
-                        ⚡ One-Click Auto-Fill (1004)
+                        {tLog.oneClickAutofill || "⚡ One-Click Auto-Fill (1004)"}
                       </button>
-                      <span className="text-[var(--text-muted)]">Resend in 30s</span>
+                      <span className="text-[var(--text-muted)]">{tLog.resendIn || "Resend in 30s"}</span>
                     </div>
                   </div>
 
@@ -455,9 +472,9 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                   <button
                     type="submit"
                     disabled={loading || otpValue.length < 4}
-                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30"
+                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 cursor-pointer"
                   >
-                    {loading ? "Verifying..." : "Verify OTP & Enter KrishiMitra"}
+                    {loading ? (isHindi ? "सत्यापित हो रहा है..." : "Verifying...") : (tLog.verifyOtp || "Verify OTP & Enter KrishiMitra")}
                     <CheckCircle2 className="w-4 h-4" />
                   </button>
                 </form>
@@ -471,11 +488,11 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1">
-                    Farmer Full Name
+                    {tLog.fullName || "Farmer Full Name"}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Gurpreet Singh"
+                    placeholder={isHindi ? "उदा. गुरप्रीत सिंह" : "e.g. Gurpreet Singh"}
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border)] text-white text-xs font-semibold focus:border-emerald-500 focus:outline-none"
@@ -485,7 +502,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
 
                 <div>
                   <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1">
-                    Mobile Number
+                    {tLog.farmerMobile || "Mobile Number"}
                   </label>
                   <input
                     type="tel"
@@ -503,7 +520,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1">
-                    Agricultural State
+                    {isHindi ? "कृषि राज्य" : "Agricultural State"}
                   </label>
                   <select
                     value={regState}
@@ -518,7 +535,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                   >
                     {INDIA_STATES_DATA.map((s) => (
                       <option key={s.state} value={s.state} className="bg-slate-900 text-white">
-                        {s.state}
+                        {localizeTerm(s.state, isHindi)}
                       </option>
                     ))}
                   </select>
@@ -526,7 +543,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
 
                 <div>
                   <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1">
-                    District / Tehsil
+                    {isHindi ? "जिला / तहसील" : "District / Tehsil"}
                   </label>
                   <select
                     value={regDistrict}
@@ -535,7 +552,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                   >
                     {currentDistricts.map((d) => (
                       <option key={d.name} value={d.name} className="bg-slate-900 text-white">
-                        {d.name} ({d.crop})
+                        {d.name} ({localizeTerm(d.crop, isHindi)})
                       </option>
                     ))}
                   </select>
@@ -545,7 +562,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1">
-                    Farm Parcel Area (Acres)
+                    {tLog.landSize || "Farm Parcel Area (Acres)"}
                   </label>
                   <input
                     type="number"
@@ -558,7 +575,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
 
                 <div>
                   <label className="block text-[11px] font-bold text-[var(--text-secondary)] mb-1">
-                    Primary Sown Crop
+                    {tLog.primaryCrop || "Primary Sown Crop"}
                   </label>
                   <select
                     value={regCrop}
@@ -568,7 +585,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
                     {["Wheat", "Rice", "Cotton", "Grapes", "Soybean", "Groundnut", "Mustard", "Sugarcane", "Maize", "Chilli"].map(
                       (c) => (
                         <option key={c} value={c} className="bg-slate-900 text-white">
-                          {c}
+                          {localizeTerm(c, isHindi)}
                         </option>
                       )
                     )}
@@ -579,9 +596,9 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 mt-2"
+                className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 mt-2 cursor-pointer"
               >
-                {loading ? "Registering Parcel..." : "Create Account & Enter Platform"}
+                {loading ? (isHindi ? "पंजीकरण जारी..." : "Registering Parcel...") : (tLog.registerBtn || "Create Account & Enter Platform")}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -591,7 +608,7 @@ export default function LoginPage({ onLogin, language, setLanguage }) {
 
       {/* Footer Credentials */}
       <footer className="border-t border-[var(--border)] bg-[var(--bg-surface)]/80 py-3 text-center text-xs text-[var(--text-secondary)]">
-        <span>Empowering 140M+ Indian Agrarian Households • Certified ICAR Agronomy Engine</span>
+        <span>{isHindi ? "१४ करोड़+ भारतीय किसान परिवारों के लिए समर्पित • ICAR प्रमाणित सटीक कृषि विज्ञान इंजन" : "Empowering 140M+ Indian Agrarian Households • Certified ICAR Agronomy Engine"}</span>
       </footer>
     </div>
   );

@@ -14,8 +14,10 @@ import ViksitBharat from "./components/ViksitBharat";
 import FarmMap from "./components/FarmMap";
 import ProfileSettings from "./components/ProfileSettings";
 import LoginPage, { DEMO_FARMER_ACCOUNTS } from "./components/LoginPage";
+import AdVideoShowcase from "./components/AdVideoShowcase";
+import ExplainableAI from "./components/ExplainableAI";
 import { INDIA_STATES_DATA, findNearestIndianDistrict } from "./data/indiaLocations";
-import { translations } from "./translations";
+import { translations, toHindiDigits, formatLocalizedVal, localizeTerm } from "./translations";
 import confetti from "canvas-confetti";
 import {
   Menu,
@@ -28,7 +30,8 @@ import {
   LogOut,
   ChevronDown,
   Sparkles,
-  Crosshair
+  Crosshair,
+  Film
 } from "lucide-react";
 import {
   API_BASE,
@@ -47,14 +50,24 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Authentication State (Separate Login Page)
+  const isUrlAdMode = typeof window !== "undefined" && (
+    window.location.search.includes("ad") ||
+    window.location.search.includes("commercial")
+  );
+
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem("km_user");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
+      if (saved) return JSON.parse(saved);
+      if (isUrlAdMode) return DEMO_FARMER_ACCOUNTS[0];
       return null;
+    } catch {
+      return isUrlAdMode ? DEMO_FARMER_ACCOUNTS[0] : null;
     }
   });
+
+  // 90-Second Ad Video Showcase Overlay State
+  const [isAdShowcaseOpen, setIsAdShowcaseOpen] = useState(isUrlAdMode);
 
   // Top Header Location Switcher Modal / Dropdown
   const [showLocationPicker, setShowLocationPicker] = useState(false);
@@ -373,31 +386,43 @@ export default function App() {
 
   // Render separate dedicated Login Page if farmer is not signed in
   if (!currentUser) {
-    return (
-      <LoginPage
-        onLogin={handleUserLogin}
-        language={language}
-        setLanguage={setLanguage}
-      />
-    );
+    if (isAdShowcaseOpen) {
+      handleUserLogin(DEMO_FARMER_ACCOUNTS[0]);
+    } else {
+      return (
+        <LoginPage
+          onLogin={handleUserLogin}
+          language={language}
+          setLanguage={setLanguage}
+          onWatchAd={() => {
+            handleUserLogin(DEMO_FARMER_ACCOUNTS[0]);
+            setIsAdShowcaseOpen(true);
+          }}
+        />
+      );
+    }
   }
+
+  const isHindi = language === "hi";
+  const num = (v) => (isHindi ? toHindiDigits(v) : String(v));
 
   // Page title mapping
   const pageTitles = {
-    dashboard: "Dashboard Overview",
-    farmIntelligence: "Farm Intelligence & Field Telemetry",
-    weather: "Weather Intelligence & NWP Forecast",
-    cropIntelligence: "Crop Intelligence & ML Recommendations",
-    diseaseRisk: "Farm Risk Command Center",
-    smartIrrigation: "Smart Irrigation & Soil Hydrology",
-    irrigation: "Smart Irrigation & Soil Hydrology",
-    planner: "Farm Milestone & Work Planner",
-    maps: "Geospatial Agricultural Map",
-    assistant: "Krishi Copilot AI Assistant",
-    analytics: "Farm Performance Analytics",
-    alerts: "Agronomic Alert & Advisory Center",
-    viksitBharat: "Government Official Datasets & Schemes",
-    settings: "Farm Profile & Platform Settings"
+    dashboard: isHindi ? "डैशबोर्ड सिंहावलोकन" : "Dashboard Overview",
+    farmIntelligence: isHindi ? "खेत ज्ञान व मृदा टेलीमेट्री" : "Farm Intelligence & Field Telemetry",
+    weather: isHindi ? "मौसम बुद्धिमत्ता एवं NWP पूर्वानुमान" : "Weather Intelligence & NWP Forecast",
+    cropIntelligence: isHindi ? "AI फसल सिफ़ारिश एवं उपयुक्तता" : "Crop Intelligence & ML Recommendations",
+    explainableAi: isHindi ? "व्याख्यात्मक AI (XAI) एवं मॉडल मूल्यांकन केंद्र" : "Explainable AI (XAI) & Model Evaluation Center",
+    diseaseRisk: isHindi ? "खेत जोखिम नियंत्रण केंद्र" : "Farm Risk Command Center",
+    smartIrrigation: isHindi ? "स्मार्ट सिंचाई एवं जल संरक्षण" : "Smart Irrigation & Soil Hydrology",
+    irrigation: isHindi ? "स्मार्ट सिंचाई एवं जल संरक्षण" : "Smart Irrigation & Soil Hydrology",
+    planner: isHindi ? "कृषि कार्य योजनाकार" : "Farm Milestone & Work Planner",
+    maps: isHindi ? "भौगोलिक खेत का नक्शा" : "Geospatial Agricultural Map",
+    assistant: isHindi ? "कृषि Copilot AI सहायक" : "Krishi Copilot AI Assistant",
+    analytics: isHindi ? "फार्म प्रदर्शन एनालिटिक्स" : "Farm Performance Analytics",
+    alerts: isHindi ? "कृषि चेतावनी व अलर्ट केंद्र" : "Agronomic Alert & Advisory Center",
+    viksitBharat: isHindi ? "सरकारी योजनाएं व न्यूनतम समर्थन मूल्य (MSP)" : "Government Official Datasets & Schemes",
+    settings: isHindi ? "किसान प्रोफ़ाइल व सेटिंग्स" : "Farm Profile & Platform Settings"
   };
 
   return (
@@ -414,6 +439,8 @@ export default function App() {
         farm={farm}
         weather={weather}
         t={t}
+        language={language}
+        isHindi={isHindi}
       />
 
       {/* ── MAIN CONTENT AREA ── */}
@@ -442,18 +469,18 @@ export default function App() {
 
           {/* Header Actions */}
           <div className="flex items-center gap-2.5 sm:gap-3">
-            {/* Location & GPS Control with Interactive NovaVarsha AI Dropdown */}
+            {/* Location & GPS Control with Interactive Agro-Zone Dropdown (Mobile & Desktop) */}
             <div className="relative">
               <div
                 onClick={() => setShowLocationPicker(!showLocationPicker)}
-                className="hidden sm:flex items-center gap-1.5 bg-[#091D14] border border-slate-800 hover:border-emerald-500/60 px-2.5 py-1 rounded-lg text-xs cursor-pointer transition-colors"
-                title="Change Farm Location (State & District)"
+                className="flex items-center gap-1 sm:gap-1.5 bg-[#091D14] border border-slate-800 hover:border-emerald-500/60 px-2 sm:px-2.5 py-1 rounded-lg text-[11px] sm:text-xs cursor-pointer transition-colors"
+                title={isHindi ? "खेत स्थान बदलें (राज्य व ज़िला)" : "Change Farm Location (State & District)"}
               >
                 <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="text-slate-200 font-bold truncate max-w-[150px]">
-                  {farm?.location_name?.split(",")[0] || farm?.location_name || "Select Farm"}
+                <span className="text-slate-200 font-bold truncate max-w-[85px] sm:max-w-[150px]">
+                  {farm?.location_name?.split(",")[0] || farm?.location_name || (isHindi ? "खेत चुनें" : "Select Farm")}
                 </span>
-                <ChevronDown className="w-3 h-3 text-slate-400" />
+                <ChevronDown className="w-3 h-3 text-slate-400 shrink-0" />
                 <button
                   type="button"
                   onClick={(e) => {
@@ -461,19 +488,19 @@ export default function App() {
                     handleHeaderGpsDetect();
                   }}
                   disabled={gpsDetecting}
-                  title="Detect Current GPS Location"
-                  className="p-0.5 text-slate-400 hover:text-emerald-400 ml-1 transition-colors"
+                  title={isHindi ? "वर्तमान जीपीएस स्थान खोजें" : "Detect Current GPS Location"}
+                  className="p-0.5 text-slate-400 hover:text-emerald-400 ml-0.5 sm:ml-1 transition-colors"
                 >
                   <Compass className={`w-3.5 h-3.5 ${gpsDetecting ? "animate-spin text-emerald-400" : ""}`} />
                 </button>
               </div>
 
-              {/* Floating Dropdown Modal */}
+              {/* Floating Dropdown Modal (Responsive on mobile) */}
               {showLocationPicker && (
-                <div className="absolute top-full mt-2 left-0 w-80 p-4 rounded-2xl bg-[#091912] border border-emerald-500/40 shadow-2xl z-[2000] space-y-3">
+                <div className="absolute top-full mt-2 left-0 sm:left-auto sm:right-0 w-[88vw] sm:w-80 max-w-[340px] p-4 rounded-2xl bg-[#091912] border border-emerald-500/40 shadow-2xl z-[2000] space-y-3">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                     <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Select Agro-Location
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> {isHindi ? "कृषि स्थान चुनें" : "Select Agro-Location"}
                     </span>
                     <button
                       onClick={() => setShowLocationPicker(false)}
@@ -485,7 +512,7 @@ export default function App() {
 
                   {/* State Select */}
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">State</label>
+                    <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">{isHindi ? "राज्य" : "State"}</label>
                     <select
                       value={headerSelectedState}
                       onChange={(e) => setHeaderSelectedState(e.target.value)}
@@ -493,7 +520,7 @@ export default function App() {
                     >
                       {INDIA_STATES_DATA.map((s) => (
                         <option key={s.state} value={s.state}>
-                          {s.state}
+                          {localizeTerm(s.state, isHindi)}
                         </option>
                       ))}
                     </select>
@@ -501,7 +528,7 @@ export default function App() {
 
                   {/* District Select */}
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">District / Agro-Zone</label>
+                    <label className="block text-[10px] font-bold text-slate-300 uppercase mb-1">{isHindi ? "ज़िला / कृषि क्षेत्र" : "District / Agro-Zone"}</label>
                     <select
                       onChange={(e) => {
                         const dist = INDIA_STATES_DATA.find((s) => s.state === headerSelectedState)?.districts.find(
@@ -514,10 +541,10 @@ export default function App() {
                       }}
                       className="w-full px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-semibold focus:border-emerald-500 focus:outline-none"
                     >
-                      <option value="">-- Choose District --</option>
+                      <option value="">{isHindi ? "-- ज़िला चुनें --" : "-- Choose District --"}</option>
                       {(INDIA_STATES_DATA.find((s) => s.state === headerSelectedState)?.districts || []).map((d) => (
                         <option key={d.name} value={d.name}>
-                          {d.name} ({d.crop})
+                          {d.name} ({localizeTerm(d.crop, isHindi)})
                         </option>
                       ))}
                     </select>
@@ -532,23 +559,34 @@ export default function App() {
                     className="w-full py-2 rounded-lg bg-emerald-600/30 border border-emerald-500/50 hover:bg-emerald-600 text-emerald-300 hover:text-white transition-colors text-xs font-bold flex items-center justify-center gap-1.5"
                   >
                     <Compass className="w-3.5 h-3.5" />
-                    <span>Detect My Current GPS</span>
+                    <span>{isHindi ? "वर्तमान जीपीएस पता लगाएं" : "Detect My Current GPS"}</span>
                   </button>
                 </div>
               )}
             </div>
 
+            {/* 🎬 90-Second Commercial Showcase Button */}
+            <button
+              onClick={() => setIsAdShowcaseOpen(true)}
+              className="px-2 sm:px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-600 via-green-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-[11px] sm:text-xs font-bold transition-all flex items-center gap-1 shadow-[0_0_12px_rgba(16,185,129,0.4)] border border-emerald-400/50 cursor-pointer shrink-0"
+              title={isHindi ? "९० सेकंड का प्लेटफॉर्म विज्ञापन देखें" : "Watch 90-Second Platform Commercial (Ad Showcase)"}
+            >
+              <Film className="w-3.5 h-3.5 text-amber-300 animate-pulse shrink-0" />
+              <span className="hidden sm:inline">{isHindi ? "विज्ञापन (१मि ३०से)" : "Play Ad (1m 30s)"}</span>
+              <span className="sm:hidden">{isHindi ? "विज्ञापन" : "Ad"}</span>
+            </button>
+
             {/* AI Status: Online Badge */}
-            <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-950/70 border border-emerald-800/80 text-[10px] font-bold text-emerald-400">
+            <div className="hidden xl:flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-950/70 border border-emerald-800/80 text-[10px] font-bold text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>AI Engine: Online</span>
+              <span>{isHindi ? "AI इंजन: ऑनलाइन" : "AI Engine: Online"}</span>
             </div>
 
-            {/* Font Size Adjuster Button */}
+            {/* Font Size Adjuster Button (Desktop & Tablet) */}
             <button
               onClick={cycleFontSize}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 hover:text-white hover:border-slate-700 transition-colors flex items-center gap-1.5"
-              title="Adjust Font Size: Normal (100%), Large (115%), Extra Large (130%)"
+              className="hidden sm:flex px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 hover:text-white hover:border-slate-700 transition-colors items-center gap-1"
+              title={isHindi ? "फ़ॉन्ट आकार बदलें" : "Adjust Font Size: Normal (100%), Large (115%), Extra Large (130%)"}
             >
               <span className="font-mono text-xs font-bold text-emerald-400">Aa</span>
               <span className="text-[11px] font-mono text-slate-300">
@@ -556,62 +594,61 @@ export default function App() {
               </span>
             </button>
 
-            {/* High Contrast Toggle Button */}
+            {/* High Contrast Toggle Button (Desktop & Tablet) */}
             <button
               onClick={toggleContrast}
-              className={`px-2.5 py-1 rounded-lg border text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`hidden sm:flex px-2 py-1 rounded-lg border text-xs font-bold transition-all items-center gap-1 ${
                 contrastMode === "high"
                   ? "bg-amber-400 text-black border-amber-300 shadow-md font-extrabold"
                   : "bg-slate-900 border-slate-800 text-slate-200 hover:text-white"
               }`}
-              title="Toggle Ultra-High Contrast Mode (WCAG AAA)"
+              title={isHindi ? "उच्च कंट्रास्ट मोड बदलें" : "Toggle Ultra-High Contrast Mode (WCAG AAA)"}
             >
               <span>◐</span>
-              <span className="hidden sm:inline">{contrastMode === "high" ? "High Contrast" : "Contrast"}</span>
             </button>
 
-            {/* Language Selector */}
+            {/* Language Selector (Always visible on mobile & desktop) */}
             <button
               onClick={() => setLanguage(language === "en" ? "hi" : "en")}
-              className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 hover:text-white hover:border-slate-700 transition-colors flex items-center gap-1.5"
-              title="Toggle Language"
+              className="px-2 sm:px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 hover:text-white hover:border-slate-700 transition-colors flex items-center gap-1 shrink-0"
+              title={isHindi ? "भाषा बदलें" : "Toggle Language"}
             >
-              <Globe2 className="w-3.5 h-3.5 text-emerald-400" />
+              <Globe2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <span>{language === "en" ? "हिन्दी" : "EN"}</span>
             </button>
 
             {/* Notification Bell (Links to Alerts tab) */}
             <button
               onClick={() => setActiveTab("alerts")}
-              className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 relative transition-colors"
-              title="Agronomic Alerts"
+              className="p-1.5 sm:p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:border-slate-700 relative transition-colors shrink-0"
+              title={isHindi ? "कृषि अलर्ट" : "Agronomic Alerts"}
             >
-              <Bell className="w-4 h-4" />
+              <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400 animate-ping" />
               <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-amber-400" />
             </button>
 
-            {/* Farmer Profile Badge */}
+            {/* Farmer Profile Badge (Always visible on mobile & desktop) */}
             <div
               onClick={() => setActiveTab("settings")}
-              className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition-colors text-xs"
-              title="View Farmer Profile"
+              className="flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2.5 py-1 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-emerald-500/50 cursor-pointer transition-colors text-xs shrink-0"
+              title={isHindi ? "किसान प्रोफ़ाइल देखें" : "View Farmer Profile"}
             >
-              <div className="w-6 h-6 rounded-full bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 flex items-center justify-center font-bold text-xs">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 flex items-center justify-center font-bold text-xs shrink-0">
                 🌾
               </div>
-              <span className="text-white font-bold max-w-[100px] truncate">
-                {currentUser?.farmer_name || farm?.farmer_name || "Farmer"}
+              <span className="text-white font-bold max-w-[60px] sm:max-w-[100px] truncate text-[11px] sm:text-xs">
+                {currentUser?.farmer_name?.split(" ")[0] || farm?.farmer_name?.split(" ")[0] || (isHindi ? "किसान" : "Farmer")}
               </span>
             </div>
 
-            {/* Logout / Switch Account Button */}
+            {/* Logout / Switch Account Button (Always visible on mobile & desktop) */}
             <button
               onClick={handleLogout}
-              className="p-1.5 rounded-lg bg-red-950/30 border border-red-800/50 text-red-300 hover:bg-red-900/50 hover:text-white transition-colors"
-              title="Sign Out / Switch Farmer Account"
+              className="p-1.5 rounded-lg bg-red-950/40 border border-red-800/60 text-red-300 hover:bg-red-900/60 hover:text-white transition-colors shrink-0"
+              title={isHindi ? "लॉग आउट / खाता बदलें" : "Sign Out / Switch Farmer Account"}
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
         </header>
@@ -621,27 +658,27 @@ export default function App() {
           <div className="flex items-center gap-3 overflow-x-auto py-0.5 scrollbar-none">
             <span className="flex items-center gap-1.5 font-mono text-[var(--leaf)] font-bold">
               <span className="w-2 h-2 rounded-full bg-[var(--leaf)] animate-ping inline-block" />
-              <span>LIVE TELEMETRY</span>
+              <span>{t.liveTelemetry || "LIVE TELEMETRY"}</span>
             </span>
             <span className="text-[var(--border)]">|</span>
             <span className="text-[var(--text-secondary)]">
-              Territory: <strong className="text-white">{farm?.location_name || "Ludhiana, Punjab"}</strong>
+              {t.territory || "Territory"}: <strong className="text-white">{farm?.location_name || "Ludhiana, Punjab"}</strong>
             </span>
             <span className="text-[var(--border)]">|</span>
             <span className="text-[var(--text-secondary)]">
-              Temp: <strong className="text-[var(--harvest)]">{weather?.temperature || 28}°C</strong>
+              {t.temp || "Temp"}: <strong className="text-[var(--harvest)]">{num(weather?.temperature || 28)}°C</strong>
             </span>
             <span className="text-[var(--border)]">|</span>
             <span className="text-[var(--text-secondary)]">
-              RH: <strong className="text-[var(--sky)]">{weather?.humidity || 62}%</strong>
+              {t.rh || "RH"}: <strong className="text-[var(--sky)]">{num(weather?.humidity || 62)}%</strong>
             </span>
             <span className="text-[var(--border)]">|</span>
             <span className="text-[var(--text-secondary)]">
-              Soil Moisture: <strong className="text-[var(--leaf)]">68% VWC</strong>
+              {t.soilMoisture || "Soil Moisture"}: <strong className="text-[var(--leaf)]">{num(68)}% VWC</strong>
             </span>
             <span className="text-[var(--border)]">|</span>
             <span className="text-[var(--text-secondary)]">
-              Irrigation Directive: <strong className="text-[var(--sky)]">{smartIrrigation?.irrigation_data?.status || "Hold (Rain 24h)"}</strong>
+              {t.irrigationDirective || "Irrigation Directive"}: <strong className="text-[var(--sky)]">{localizeTerm(smartIrrigation?.irrigation_data?.status || (isHindi ? "स्थगित (२४ घंटे में वर्षा)" : "Hold (Rain 24h)"), isHindi)}</strong>
             </span>
           </div>
 
@@ -654,7 +691,17 @@ export default function App() {
                   : "bg-[var(--surface)] text-[var(--sky)] hover:text-white border border-[var(--sky)]/30"
               }`}
             >
-              <span>💧 Smart Irrigation</span>
+              <span>💧 {t.tabs?.smartIrrigation || "Smart Irrigation"}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("explainableAi")}
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                activeTab === "explainableAi"
+                  ? "bg-[var(--primary)] text-white shadow"
+                  : "bg-[var(--surface)] text-teal-300 hover:text-white border border-teal-500/30"
+              }`}
+            >
+              <span>🔬 {t.tabs?.explainableAi || "Explainable AI"}</span>
             </button>
             <button
               onClick={() => setActiveTab("maps")}
@@ -664,7 +711,7 @@ export default function App() {
                   : "bg-[var(--surface)] text-[var(--leaf)] hover:text-white border border-[var(--primary)]/30"
               }`}
             >
-              <span>🛰️ Satellite Map</span>
+              <span>🛰️ {t.tabs?.maps || "Satellite Map"}</span>
             </button>
           </div>
         </div>
@@ -679,6 +726,8 @@ export default function App() {
               recommendation={recommendation}
               analytics={analytics}
               t={t}
+              language={language}
+              isHindi={isHindi}
               onRunAiAnalysis={handleRunKillerDemoAnalysis}
               isAnalyzing={isAnalyzing}
               onNavigate={setActiveTab}
@@ -690,6 +739,8 @@ export default function App() {
               farm={farm}
               onUpdateFarm={handleUpdateFarm}
               t={t}
+              language={language}
+              isHindi={isHindi}
             />
           )}
 
@@ -699,6 +750,8 @@ export default function App() {
               farm={farm}
               weather={weather}
               t={t}
+              language={language}
+              isHindi={isHindi}
             />
           )}
 
@@ -709,6 +762,8 @@ export default function App() {
               onCreateTask={handleCreateTask}
               onDeleteTask={handleDeleteTask}
               t={t}
+              language={language}
+              isHindi={isHindi}
             />
           )}
 
@@ -716,6 +771,8 @@ export default function App() {
             <WeatherIntelligence
               weather={weather}
               t={t}
+              language={language}
+              isHindi={isHindi}
             />
           )}
 
@@ -727,6 +784,8 @@ export default function App() {
               onRunPrediction={handleRunPrediction}
               isComputing={isAnalyzing}
               t={t}
+              language={language}
+              isHindi={isHindi}
             />
           )}
 
@@ -736,6 +795,8 @@ export default function App() {
               weather={weather}
               smartIrrigation={smartIrrigation}
               t={t}
+              language={language}
+              isHindi={isHindi}
             />
           )}
 
@@ -744,6 +805,8 @@ export default function App() {
               farm={farm}
               onUpdateCoordinates={handleUpdateCoordinates}
               t={t}
+              language={language}
+              isHindi={isHindi}
             />
           )}
 
@@ -752,6 +815,7 @@ export default function App() {
               farm={farm}
               weather={weather}
               language={language}
+              isHindi={isHindi}
               t={t}
             />
           )}
@@ -760,6 +824,16 @@ export default function App() {
             <FarmAnalytics
               analytics={analytics}
               farm={farm}
+              t={t}
+              language={language}
+              isHindi={isHindi}
+            />
+          )}
+
+          {activeTab === "explainableAi" && (
+            <ExplainableAI
+              language={language}
+              isHindi={isHindi}
               t={t}
             />
           )}
@@ -770,12 +844,16 @@ export default function App() {
               weather={weather}
               smartIrrigation={smartIrrigation}
               t={t}
+              language={language}
+              isHindi={isHindi}
             />
           )}
 
           {activeTab === "viksitBharat" && (
             <ViksitBharat
               t={t}
+              language={language}
+              isHindi={isHindi}
             />
           )}
 
@@ -791,10 +869,21 @@ export default function App() {
               contrastMode={contrastMode}
               setContrastMode={setContrastMode}
               t={t}
+              isHindi={isHindi}
             />
           )}
         </main>
       </div>
+
+      {/* 🎬 90-Second Commercial Showcase Overlay & Auto-Tour */}
+      <AdVideoShowcase
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isOpen={isAdShowcaseOpen}
+        onClose={() => setIsAdShowcaseOpen(false)}
+        language={language}
+        isHindi={isHindi}
+      />
     </div>
   );
 }
